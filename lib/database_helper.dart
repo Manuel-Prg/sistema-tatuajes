@@ -17,6 +17,8 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
+    print('Ruta de la Base de Datos: $path'); // 👈 ¡Añade esta línea!
+
     return await openDatabase(
       path,
       version: 1,

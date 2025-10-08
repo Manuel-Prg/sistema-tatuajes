@@ -38,42 +38,51 @@ class SistemaTatuajesApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.light,
-        primaryColor: const Color(0xFF007AFF), // iOS blue
-        scaffoldBackgroundColor: const Color(0xFFF6F7F9),
+        primaryColor: const Color(0xFF007AFF),
+        scaffoldBackgroundColor: const Color(0xFFF3F6FB),
         textTheme: GoogleFonts.poppinsTextTheme().apply(
-          bodyColor: const Color(0xFF1C1C1E),
-          displayColor: const Color(0xFF1C1C1E),
+          bodyColor: const Color(0xFF23272F),
+          displayColor: const Color(0xFF23272F),
         ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF007AFF),
           brightness: Brightness.light,
         ),
-        cardTheme: CardTheme(
-          elevation: 6,
+        cardTheme: CardThemeData(
+          elevation: 10,
           color: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
           ),
+          shadowColor: Colors.black.withOpacity(0.08),
         ),
         appBarTheme: const AppBarTheme(
           elevation: 0,
           centerTitle: true,
           backgroundColor: Colors.white,
-          foregroundColor: Color(0xFF1C1C1E),
-          titleTextStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+          foregroundColor: Color(0xFF23272F),
+          titleTextStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFF2F2F7),
+          fillColor: const Color(0xFFF2F4F8),
           border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide.none),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF007AFF),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            foregroundColor: Colors.white,
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
       ),
@@ -117,79 +126,96 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar (Apple-like)
+          // Sidebar (Apple-like mejorado)
           Container(
             width: 260,
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFAFBFF), Color(0xFFE9F0FB)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
               borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(18),
-                  bottomRight: Radius.circular(18)),
+                  topRight: Radius.circular(22),
+                  bottomRight: Radius.circular(22)),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6))
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 32,
+                  offset: const Offset(0, 8),
+                ),
               ],
             ),
             child: Column(
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.only(top: 32, bottom: 18),
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        width: 64,
+                        height: 64,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF2F2F7),
                           shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF007AFF), Color(0xFF4F8CFF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 8)
+                              color: Colors.blue.withOpacity(0.12),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
                           ],
                         ),
                         child: const Icon(
                           Icons.brush_rounded,
                           size: 36,
-                          color: Color(0xFF007AFF),
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text(
                         'Sistema de Tatuajes',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF1C1C1E),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF23272F),
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Text(
                         'Luis Eduardo',
                         style: GoogleFonts.poppins(
-                          color: const Color(0xFF6E6E73),
-                          fontSize: 12,
+                          color: const Color(0xFF7B8494),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: Color(0xFFF2F2F7)),
+                const Divider(height: 1, color: Color(0xFFE3E8F0)),
 
                 // Menu Items
                 Expanded(
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: _navItems.length,
                     itemBuilder: (context, index) {
                       final isSelected = _selectedIndex == index;
-                      return _buildNavItem(
-                        _navItems[index],
-                        isSelected,
-                        () => setState(() => _selectedIndex = index),
+                      return KeyedSubtree(
+                        key: ValueKey('nav_item_$index'),
+                        child: _buildNavItem(
+                          _navItems[index],
+                          isSelected,
+                          () => setState(() => _selectedIndex = index),
+                        ),
                       );
                     },
                   ),
@@ -197,23 +223,39 @@ class _MainScreenState extends State<MainScreen> {
 
                 // Footer
                 Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Seminario de Desarrollo\nTecnológico 2\nOctubre 2025',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      color: Colors.white60,
-                      fontSize: 10,
-                    ),
+                  padding: const EdgeInsets.only(bottom: 18, top: 8),
+                  child: Column(
+                    children: [
+                      const Divider(height: 1, color: Color(0xFFE3E8F0)),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Seminario de Desarrollo\nTecnológico 2\nOctubre 2025',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFFB0B8C1),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
 
-          // Main Content
+          // Main Content con fondo gradiente suave
           Expanded(
-            child: _screens[_selectedIndex],
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF3F6FB), Color(0xFFE9F0FB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: _screens[_selectedIndex],
+            ),
           ),
         ],
       ),
@@ -223,37 +265,60 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildNavItem(
       NavigationItem item, bool isSelected, VoidCallback onTap) {
     return InkWell(
+      borderRadius: BorderRadius.circular(14),
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: AnimatedContainer(
+        key: ValueKey(item.label),
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF2F2F7) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? const Color(0xFFEDF3FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF007AFF).withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: isSelected
                     ? const Color(0xFF007AFF)
-                    : const Color(0xFFF2F2F7),
-                borderRadius: BorderRadius.circular(9),
+                    : const Color(0xFFF2F4F8),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF007AFF).withOpacity(0.18),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
               ),
               child: Icon(item.icon,
-                  color: isSelected ? Colors.white : const Color(0xFF6E6E73),
-                  size: 20),
+                  color: isSelected ? Colors.white : const Color(0xFF7B8494),
+                  size: 22),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Text(item.label,
                 style: GoogleFonts.poppins(
-                    color: isSelected
-                        ? const Color(0xFF1C1C1E)
-                        : const Color(0xFF6E6E73),
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w500)),
+                  color: isSelected
+                      ? const Color(0xFF23272F)
+                      : const Color(0xFF7B8494),
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 15,
+                  letterSpacing: 0.1,
+                )),
           ],
         ),
       ),

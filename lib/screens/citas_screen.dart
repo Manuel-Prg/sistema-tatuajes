@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../database_helper.dart';
 import '../theme/app_colors.dart';
+import '../widgets/common_widgets.dart';
 
 class CitasScreen extends StatefulWidget {
   const CitasScreen({super.key});
@@ -223,14 +224,14 @@ class _CitasScreenState extends State<CitasScreen> {
           : Padding(
               padding: const EdgeInsets.all(16),
               child: citas.isEmpty
-                  ? Center(
-                      child: Text('No hay citas', style: GoogleFonts.poppins()))
+                  ? const EmptyState(
+                      icon: Icons.calendar_today, title: 'No hay citas')
                   : ListView.separated(
                       itemCount: citas.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final item = citas[index];
-                        return Card(
+                        return PrimaryCard(
                           child: ListTile(
                             leading: const Icon(Icons.calendar_today),
                             title: Text('${item['fecha']} ${item['hora']}',
