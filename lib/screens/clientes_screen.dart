@@ -283,8 +283,9 @@ class _ClientesScreenState extends State<ClientesScreen> {
                           icon: Icons.email_rounded,
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
-                            if (value?.isEmpty ?? true)
+                            if (value?.isEmpty ?? true) {
                               return 'Campo requerido';
+                            }
                             if (!value!.contains('@')) return 'Correo inválido';
                             return null;
                           },
@@ -383,7 +384,8 @@ class _ClientesScreenState extends State<ClientesScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.clientesAccent, width: 2),
+          borderSide:
+              const BorderSide(color: AppColors.clientesAccent, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey[50],
@@ -430,7 +432,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.people_rounded,
                         color: AppColors.clientesAccent,
                         size: 28,

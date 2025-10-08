@@ -281,10 +281,12 @@ class _DisenosScreenState extends State<DisenosScreen> {
                           icon: Icons.attach_money_rounded,
                           keyboardType: TextInputType.number,
                           validator: (value) {
-                            if (value?.isEmpty ?? true)
+                            if (value?.isEmpty ?? true) {
                               return 'Campo requerido';
-                            if (double.tryParse(value!) == null)
+                            }
+                            if (double.tryParse(value!) == null) {
                               return 'Precio inválido';
+                            }
                             return null;
                           },
                         ),
@@ -373,7 +375,8 @@ class _DisenosScreenState extends State<DisenosScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.disenosAccent, width: 2),
+          borderSide:
+              const BorderSide(color: AppColors.disenosAccent, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey[50],
@@ -415,7 +418,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.palette_rounded,
                         color: AppColors.disenosAccent,
                         size: 28,

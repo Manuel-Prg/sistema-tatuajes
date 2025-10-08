@@ -228,11 +228,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               color: AppColors.pagosAccent,
               trend: '+25%',
             ),
-            AnimatedStatCard(
+            const AnimatedStatCard(
               label: 'Satisfacción',
               value: '98%',
               icon: Icons.star_rounded,
-              color: const Color(0xFFFFC107),
+              color: Color(0xFFFFC107),
               trend: '+3%',
             ),
           ],
@@ -427,7 +427,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           color: Colors.black54,
         ),
       ),
-      trailing: Icon(
+      trailing: const Icon(
         Icons.chevron_right,
         color: Colors.black26,
       ),
