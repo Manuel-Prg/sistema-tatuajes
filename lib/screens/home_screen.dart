@@ -177,6 +177,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildStatsSection() {
+    // Build a concrete list from the stats map so we can index it in the grid
+    final statItems = [
+      {
+        'title': 'Clientes',
+        'value': stats['clientes'].toString(),
+        'icon': Icons.people_rounded,
+        'color': AppColors.clientesAccent,
+        'trend': '+12%',
+      },
+      {
+        'title': 'Tatuadores',
+        'value': stats['tatuadores'].toString(),
+        'icon': Icons.brush_rounded,
+        'color': AppColors.tatuadoresAccent,
+        'trend': '+5%',
+      },
+      {
+        'title': 'Citas',
+        'value': stats['citas'].toString(),
+        'icon': Icons.event_rounded,
+        'color': AppColors.citasAccent,
+        'trend': '+18%',
+      },
+      {
+        'title': 'Diseños',
+        'value': stats['diseños'].toString(),
+        'icon': Icons.palette_rounded,
+        'color': AppColors.disenosAccent,
+        'trend': '+8%',
+      },
+      {
+        'title': 'Ingresos',
+        'value': '\$${totalIngresos.toStringAsFixed(2)}',
+        'icon': Icons.attach_money_rounded,
+        'color': AppColors.pagosAccent,
+        'trend': '+25%',
+      },
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -185,58 +224,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           subtitle: 'Vista general del sistema',
         ),
         const SizedBox(height: 20),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 1.8,
-          children: [
-            AnimatedStatCard(
-              label: 'Clientes Registrados',
-              value: stats['clientes'].toString(),
-              icon: Icons.people_rounded,
-              color: AppColors.clientesAccent,
-              trend: '+12%',
+        LayoutBuilder(builder: (context, constraints) {
+          // Choose columns based on width
+          int cols = 1;
+          if (constraints.maxWidth > 1200) {
+            cols = 3;
+          } else if (constraints.maxWidth > 800) {
+            cols = 2;
+          }
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cols,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              childAspectRatio: constraints.maxWidth / (cols * 220),
             ),
-            AnimatedStatCard(
-              label: 'Tatuadores Activos',
-              value: stats['tatuadores'].toString(),
-              icon: Icons.brush_rounded,
-              color: AppColors.tatuadoresAccent,
-              trend: '+5%',
-            ),
-            AnimatedStatCard(
-              label: 'Citas Programadas',
-              value: stats['citas'].toString(),
-              icon: Icons.event_rounded,
-              color: AppColors.citasAccent,
-              trend: '+18%',
-            ),
-            AnimatedStatCard(
-              label: 'Diseños Disponibles',
-              value: stats['diseños'].toString(),
-              icon: Icons.palette_rounded,
-              color: AppColors.disenosAccent,
-              trend: '+8%',
-            ),
-            AnimatedStatCard(
-              label: 'Ingresos Totales',
-              value: '\$${totalIngresos.toStringAsFixed(2)}',
-              icon: Icons.attach_money_rounded,
-              color: AppColors.pagosAccent,
-              trend: '+25%',
-            ),
-            const AnimatedStatCard(
-              label: 'Satisfacción',
-              value: '98%',
-              icon: Icons.star_rounded,
-              color: Color(0xFFFFC107),
-              trend: '+3%',
-            ),
-          ],
-        ),
+            itemCount: statItems.length,
+            itemBuilder: (context, index) {
+              final item = statItems[index];
+              return _statCard(item);
+            },
+          );
+        }),
       ],
     );
   }
@@ -289,69 +300,96 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           subtitle: 'Acciones frecuentes del sistema',
         ),
         const SizedBox(height: 20),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.3,
-          ),
-          itemCount: actions.length,
-          itemBuilder: (context, index) {
-            final action = actions[index];
-            return _buildQuickActionCard(action);
-          },
-        ),
+        LayoutBuilder(builder: (context, constraints) {
+          final itemWidth = 160.0;
+          final cols =
+              (constraints.maxWidth / (itemWidth + 24)).floor().clamp(1, 4);
+          return Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: actions.map((action) {
+              return SizedBox(
+                width: (constraints.maxWidth / cols) - 16,
+                child: InkWell(
+                  onTap: action.onTap,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: action.color.withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(action.icon, color: action.color, size: 36),
+                        const SizedBox(height: 12),
+                        Text(
+                          action.title,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildQuickActionCard(_QuickActionData action) {
+  Widget _statCard(Map<String, dynamic> item) {
     return PrimaryCard(
-      onTap: action.onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  action.color.withOpacity(0.2),
-                  action.color.withOpacity(0.1),
-                ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: item['color'].withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(item['icon'], color: item['color'], size: 28),
               ),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              action.icon,
-              color: action.color,
-              size: 32,
-            ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: item['color'].withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(item['trend'],
+                    style: GoogleFonts.poppins(
+                        color: item['color'],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          Text(
-            action.title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            action.subtitle,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: Colors.black45,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          Text(item['value'],
+              style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87)),
+          const SizedBox(height: 6),
+          Text(item['title'],
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black54)),
         ],
       ),
     );

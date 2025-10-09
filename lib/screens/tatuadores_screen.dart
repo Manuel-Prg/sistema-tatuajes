@@ -369,7 +369,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.tatuadoresAccent, width: 2),
+          borderSide: const BorderSide(color: AppColors.tatuadoresAccent, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey[50],
@@ -411,7 +411,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.brush_rounded,
                         color: AppColors.tatuadoresAccent,
                         size: 28,
