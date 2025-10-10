@@ -21,6 +21,12 @@ dependencies:
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
   intl: ^0.18.1
+
+   # Gráficas
+  fl_chart: ^0.66.0
+
+   # Calendario
+  table_calendar: ^3.0.9
   
   # Utilidades
   provider: ^6.1.1

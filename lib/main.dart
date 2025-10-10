@@ -3,22 +3,21 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'dart:io' show Platform;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'database_helper.dart';
 import 'screens/home_screen.dart';
 import 'screens/clientes_screen.dart';
 import 'screens/tatuadores_screen.dart';
-import 'screens/diseños_screen.dart';
+import 'screens/disenos_screen.dart';
 import 'screens/citas_screen.dart';
 import 'screens/pagos_screen.dart';
 import 'screens/reportes_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize date formatting locale data to avoid LocaleDataException
   await initializeDateFormatting();
 
-  // Initialize sqflite for desktop (Windows, Linux, macOS) using ffi
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-    // Initialize and set the ffi database factory for desktop platforms
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
@@ -98,16 +97,38 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  int citasHoyCount = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ClientesScreen(),
-    const TatuadoresScreen(),
-    const DisenosScreen(),
-    const CitasScreen(),
-    const PagosScreen(),
-    const ReportesScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadCitasHoy();
+  }
+
+  // Cargar número de citas del día
+  Future<void> _loadCitasHoy() async {
+    try {
+      final citas = await DatabaseHelper.instance.getCitas();
+      final hoy = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final citasDeHoy = citas.where((cita) => cita['fecha'] == hoy).length;
+
+      if (mounted) {
+        setState(() {
+          citasHoyCount = citasDeHoy;
+        });
+      }
+    } catch (e) {
+      // Silenciosamente manejar error
+    }
+  }
+
+  void _onNavigate(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // Recargar contador cuando se navega
+    _loadCitasHoy();
+  }
 
   final List<NavigationItem> _navItems = [
     NavigationItem(icon: Icons.home, label: 'Inicio'),
@@ -121,10 +142,19 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      HomeScreen(onNavigate: _onNavigate),
+      const ClientesScreen(),
+      const TatuadoresScreen(),
+      const DisenosScreen(),
+      const CitasScreen(),
+      const PagosScreen(),
+      const ReportesScreen(),
+    ];
+
     return Scaffold(
       body: Row(
         children: [
-          // Sidebar (Apple-like mejorado)
           Container(
             width: 260,
             decoration: BoxDecoration(
@@ -146,7 +176,6 @@ class _MainScreenState extends State<MainScreen> {
             ),
             child: Column(
               children: [
-                // Header
                 Container(
                   padding: const EdgeInsets.only(top: 32, bottom: 18),
                   child: Column(
@@ -199,8 +228,6 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
                 const Divider(height: 1, color: Color(0xFFE3E8F0)),
-
-                // Menu Items
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -212,14 +239,13 @@ class _MainScreenState extends State<MainScreen> {
                         child: _buildNavItem(
                           _navItems[index],
                           isSelected,
-                          () => setState(() => _selectedIndex = index),
+                          index,
+                          () => _onNavigate(index),
                         ),
                       );
                     },
                   ),
                 ),
-
-                // Footer
                 Padding(
                   padding: const EdgeInsets.only(bottom: 18, top: 8),
                   child: Column(
@@ -241,8 +267,6 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
           ),
-
-          // Main Content con fondo gradiente suave
           Expanded(
             child: Container(
               decoration: const BoxDecoration(
@@ -252,7 +276,7 @@ class _MainScreenState extends State<MainScreen> {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: _screens[_selectedIndex],
+              child: screens[_selectedIndex],
             ),
           ),
         ],
@@ -261,7 +285,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildNavItem(
-      NavigationItem item, bool isSelected, VoidCallback onTap) {
+      NavigationItem item, bool isSelected, int index, VoidCallback onTap) {
+    // Mostrar badge solo en Citas (índice 4) si hay citas hoy
+    final showBadge = index == 4 && citasHoyCount > 0;
+
     return InkWell(
       borderRadius: BorderRadius.circular(14),
       onTap: onTap,
@@ -285,38 +312,82 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF007AFF)
-                    : const Color(0xFFF2F4F8),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF007AFF).withOpacity(0.18),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF007AFF)
+                        : const Color(0xFFF2F4F8),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF007AFF).withOpacity(0.18),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Icon(item.icon,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF7B8494),
+                      size: 22),
+                ),
+                // Badge de notificación
+                if (showBadge)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.4),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Center(
+                        child: Text(
+                          citasHoyCount.toString(),
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ]
-                    : [],
-              ),
-              child: Icon(item.icon,
-                  color: isSelected ? Colors.white : const Color(0xFF7B8494),
-                  size: 22),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 14),
-            Text(item.label,
-                style: GoogleFonts.poppins(
-                  color: isSelected
-                      ? const Color(0xFF23272F)
-                      : const Color(0xFF7B8494),
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 15,
-                  letterSpacing: 0.1,
-                )),
+            Expanded(
+              child: Text(item.label,
+                  style: GoogleFonts.poppins(
+                    color: isSelected
+                        ? const Color(0xFF23272F)
+                        : const Color(0xFF7B8494),
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 15,
+                    letterSpacing: 0.1,
+                  )),
+            ),
           ],
         ),
       ),
