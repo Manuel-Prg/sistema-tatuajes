@@ -516,7 +516,7 @@ class _CitasScreenState extends State<CitasScreen>
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.event_rounded,
                         color: AppColors.citasAccent,
                         size: 28,
@@ -648,11 +648,11 @@ class _CitasScreenState extends State<CitasScreen>
                         color: AppColors.citasAccent.withOpacity(0.3),
                         shape: BoxShape.circle,
                       ),
-                      selectedDecoration: BoxDecoration(
+                      selectedDecoration: const BoxDecoration(
                         color: AppColors.citasAccent,
                         shape: BoxShape.circle,
                       ),
-                      markerDecoration: BoxDecoration(
+                      markerDecoration: const BoxDecoration(
                         color: AppColors.citasAccent,
                         shape: BoxShape.circle,
                       ),
@@ -806,7 +806,7 @@ class _CitasScreenState extends State<CitasScreen>
               ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.event_rounded,
               color: AppColors.citasAccent,
               size: 24,

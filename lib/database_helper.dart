@@ -1,5 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -17,7 +20,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    print('Ruta de la Base de Datos: $path'); // 👈 ¡Añade esta línea!
+    print('Ruta de la Base de Datos: $path');
 
     return await openDatabase(
       path,
@@ -101,6 +104,184 @@ class DatabaseHelper {
         FOREIGN KEY (id_cita) REFERENCES citas(id_cita)
       )
     ''');
+  }
+
+  // ==================== RESPALDO Y RESTAURACIÓN ====================
+
+  /// Exportar base de datos a un archivo
+  Future<String?> exportarBaseDatos() async {
+    try {
+      // Obtener la ruta de la base de datos actual
+      final dbPath = await getDatabasesPath();
+      final dbFile = File(join(dbPath, 'tatuajes.db'));
+
+      if (!await dbFile.exists()) {
+        throw Exception('La base de datos no existe');
+      }
+
+      // Solicitar ubicación para guardar
+      String? outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Guardar respaldo de base de datos',
+        fileName: 'tatuajes_backup_${DateTime.now().millisecondsSinceEpoch}.db',
+        type: FileType.custom,
+        allowedExtensions: ['db'],
+      );
+
+      if (outputPath == null) {
+        return null; // Usuario canceló
+      }
+
+      // Asegurar extensión .db
+      if (!outputPath.endsWith('.db')) {
+        outputPath += '.db';
+      }
+
+      // Copiar archivo
+      await dbFile.copy(outputPath);
+
+      print('✓ Base de datos exportada a: $outputPath');
+      return outputPath;
+    } catch (e) {
+      print('Error al exportar base de datos: $e');
+      rethrow;
+    }
+  }
+
+  /// Importar base de datos desde un archivo
+  Future<bool> importarBaseDatos() async {
+    try {
+      // Seleccionar archivo a importar
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        dialogTitle: 'Seleccionar archivo de respaldo',
+        type: FileType.custom,
+        allowedExtensions: ['db'],
+      );
+
+      if (result == null || result.files.single.path == null) {
+        return false; // Usuario canceló
+      }
+
+      final importFile = File(result.files.single.path!);
+
+      if (!await importFile.exists()) {
+        throw Exception('El archivo seleccionado no existe');
+      }
+
+      // Cerrar base de datos actual
+      if (_database != null) {
+        await _database!.close();
+        _database = null;
+      }
+
+      // Obtener ruta de la base de datos actual
+      final dbPath = await getDatabasesPath();
+      final dbFile = File(join(dbPath, 'tatuajes.db'));
+
+      // Crear respaldo de la BD actual antes de reemplazarla
+      if (await dbFile.exists()) {
+        final backupPath = join(dbPath,
+            'tatuajes_backup_${DateTime.now().millisecondsSinceEpoch}.db');
+        await dbFile.copy(backupPath);
+        print('✓ Respaldo automático creado en: $backupPath');
+      }
+
+      // Reemplazar con la nueva base de datos
+      await importFile.copy(dbFile.path);
+
+      // Reinicializar la base de datos
+      _database = await _initDB('tatuajes.db');
+
+      print('✓ Base de datos importada exitosamente');
+      return true;
+    } catch (e) {
+      print('Error al importar base de datos: $e');
+      // Intentar reabrir la base de datos original
+      _database = null;
+      await database;
+      rethrow;
+    }
+  }
+
+  /// Crear respaldo automático en carpeta de documentos
+  Future<String> crearRespaldoAutomatico() async {
+    try {
+      // Obtener directorio de documentos
+      final directory = await getApplicationDocumentsPath();
+      final backupDir = Directory(join(directory, 'TatuajesBackup'));
+
+      // Crear directorio si no existe
+      if (!await backupDir.exists()) {
+        await backupDir.create(recursive: true);
+      }
+
+      // Obtener archivo de base de datos
+      final dbPath = await getDatabasesPath();
+      final dbFile = File(join(dbPath, 'tatuajes.db'));
+
+      if (!await dbFile.exists()) {
+        throw Exception('La base de datos no existe');
+      }
+
+      // Crear nombre con fecha
+      final timestamp = DateTime.now();
+      final fileName =
+          'tatuajes_${timestamp.year}${timestamp.month.toString().padLeft(2, '0')}${timestamp.day.toString().padLeft(2, '0')}_${timestamp.hour}${timestamp.minute}.db';
+
+      final backupPath = join(backupDir.path, fileName);
+
+      // Copiar archivo
+      await dbFile.copy(backupPath);
+
+      print('✓ Respaldo automático creado: $backupPath');
+      return backupPath;
+    } catch (e) {
+      print('Error al crear respaldo automático: $e');
+      rethrow;
+    }
+  }
+
+  /// Obtener directorio de documentos (compatible con todas las plataformas)
+  Future<String> getApplicationDocumentsPath() async {
+    if (Platform.isWindows) {
+      return Platform.environment['USERPROFILE'] ?? '';
+    } else if (Platform.isLinux) {
+      return Platform.environment['HOME'] ?? '';
+    } else if (Platform.isMacOS) {
+      return (await getApplicationDocumentsDirectory()).path;
+    } else {
+      return (await getApplicationDocumentsDirectory()).path;
+    }
+  }
+
+  /// Limpiar respaldos antiguos (mantener solo los últimos N)
+  Future<void> limpiarRespaldosAntiguos({int mantener = 5}) async {
+    try {
+      final directory = await getApplicationDocumentsPath();
+      final backupDir = Directory(join(directory, 'TatuajesBackup'));
+
+      if (!await backupDir.exists()) return;
+
+      // Obtener todos los archivos .db
+      final files = await backupDir
+          .list()
+          .where((entity) => entity is File && entity.path.endsWith('.db'))
+          .cast<File>()
+          .toList();
+
+      // Ordenar por fecha de modificación (más reciente primero)
+      files
+          .sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+
+      // Eliminar los más antiguos
+      if (files.length > mantener) {
+        for (int i = mantener; i < files.length; i++) {
+          await files[i].delete();
+          print('✓ Respaldo antiguo eliminado: ${files[i].path}');
+        }
+      }
+    } catch (e) {
+      print('Error al limpiar respaldos antiguos: $e');
+    }
   }
 
   // ==================== CLIENTES ====================

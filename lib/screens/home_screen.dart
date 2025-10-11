@@ -75,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     setState(() {
       stats = estadisticas;
       totalIngresos = ingresos;
+      citas.clear();
+      citas.addAll(todasCitas);
       citasHoy = citasDeHoy;
       proximasCitas = proximas;
       isLoading = false;
@@ -219,7 +221,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final mes = DateTime(now.year, now.month - i, 1);
       calculatedDates.add(mes);
       // Por ahora usamos datos de ejemplo proporcionales al total
-      // TODO: Calcular ingresos reales por mes desde la BD
       final valor = (totalIngresos / 6) /
           1000; // Dividir entre 6 meses y convertir a miles
       spots.add(FlSpot((5 - i).toDouble(), valor));
@@ -238,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: AppColors.pagosAccent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.trending_up_rounded,
                   color: AppColors.pagosAccent,
                   size: 20,
@@ -259,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             height: 200,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
+                gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -300,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     isCurved: true,
                     color: AppColors.pagosAccent,
                     barWidth: 3,
-                    dotData: FlDotData(show: true),
+                    dotData: const FlDotData(show: true),
                     belowBarData: BarAreaData(
                       show: true,
                       color: AppColors.pagosAccent.withOpacity(0.2),
@@ -356,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: AppColors.citasAccent.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.pie_chart_rounded,
                     color: AppColors.citasAccent,
                     size: 20,
@@ -413,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   color: AppColors.citasAccent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.pie_chart_rounded,
                   color: AppColors.citasAccent,
                   size: 20,
@@ -563,7 +564,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       color: AppColors.citasAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.event_rounded,
                       color: AppColors.citasAccent,
                     ),

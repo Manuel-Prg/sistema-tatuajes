@@ -12,6 +12,7 @@ import 'screens/disenos_screen.dart';
 import 'screens/citas_screen.dart';
 import 'screens/pagos_screen.dart';
 import 'screens/reportes_screen.dart';
+import 'screens/configuracion_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -138,6 +139,7 @@ class _MainScreenState extends State<MainScreen> {
     NavigationItem(icon: Icons.calendar_today, label: 'Citas'),
     NavigationItem(icon: Icons.attach_money, label: 'Pagos'),
     NavigationItem(icon: Icons.assessment, label: 'Reportes'),
+    NavigationItem(icon: Icons.settings, label: 'Configuración'),
   ];
 
   @override
@@ -150,6 +152,7 @@ class _MainScreenState extends State<MainScreen> {
       const CitasScreen(),
       const PagosScreen(),
       const ReportesScreen(),
+      const ConfiguracionScreen(),
     ];
 
     return Scaffold(
