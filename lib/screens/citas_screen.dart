@@ -264,7 +264,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        value: selectedCliente,
+                        initialValue: selectedCliente,
                         decoration: InputDecoration(
                           labelText: 'Cliente',
                           prefixIcon: const Icon(Icons.person_rounded),
@@ -283,7 +283,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        value: selectedTatuador,
+                        initialValue: selectedTatuador,
                         decoration: InputDecoration(
                           labelText: 'Tatuador',
                           prefixIcon: const Icon(Icons.brush_rounded),
@@ -302,7 +302,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        value: selectedDiseno,
+                        initialValue: selectedDiseno,
                         decoration: InputDecoration(
                           labelText: 'Diseño (opcional)',
                           prefixIcon: const Icon(Icons.palette_rounded),
@@ -321,7 +321,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        value: estado,
+                        initialValue: estado,
                         decoration: InputDecoration(
                           labelText: 'Estado',
                           prefixIcon: const Icon(Icons.flag_rounded),
@@ -490,12 +490,10 @@ class _CitasScreenState extends State<CitasScreen>
           Container(
             padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.white, Colors.grey[50]!],
-              ),
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -532,7 +530,7 @@ class _CitasScreenState extends State<CitasScreen>
                             style: GoogleFonts.poppins(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -540,7 +538,7 @@ class _CitasScreenState extends State<CitasScreen>
                             '${citasFiltradas.length} cita${citasFiltradas.length != 1 ? 's' : ''} programada${citasFiltradas.length != 1 ? 's' : ''}',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.black45,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -824,7 +822,7 @@ class _CitasScreenState extends State<CitasScreen>
                       style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(width: 12),

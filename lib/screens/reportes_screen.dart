@@ -428,7 +428,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -436,7 +436,10 @@ class _ReportesScreenState extends State<ReportesScreen> {
                               'Exporta reportes en formato CSV',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.black45,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.45),
                               ),
                             ),
                           ],
@@ -450,7 +453,9 @@ class _ReportesScreenState extends State<ReportesScreen> {
                         },
                         tooltip: 'Actualizar',
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.grey[100],
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           padding: const EdgeInsets.all(12),
                         ),
                       ),
@@ -560,82 +565,6 @@ class _ReportesScreenState extends State<ReportesScreen> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 40),
-
-                  // Información del Sistema
-                  const SectionHeader(title: 'Información del Sistema'),
-                  const SizedBox(height: 20),
-                  PrimaryCard(
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppColors.reportesAccent.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.info_rounded,
-                                color: AppColors.reportesAccent,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              'Detalles del Proyecto',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        _buildInfoRow('Alumno:', 'Luis Eduardo'),
-                        _buildInfoRow('Materia:',
-                            'Seminario de Desarrollo Tecnológico 2'),
-                        _buildInfoRow(
-                            'Proyecto:', 'Sistema de Gestión de Tatuajes'),
-                        _buildInfoRow('Tecnología:', 'Flutter + SQLite'),
-                        _buildInfoRow('Versión:', '2.0 Funcional'),
-                        _buildInfoRow('Fecha:', 'Octubre 2025'),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.homeAccent.withOpacity(0.1),
-                                AppColors.homeAccent.withOpacity(0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.verified_rounded,
-                                  color: AppColors.homeAccent),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'Sistema completamente funcional con exportación de reportes',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: AppColors.homeAccent,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -677,7 +606,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -685,43 +614,16 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   subtitle,
                   style: GoogleFonts.poppins(
                     fontSize: 12,
-                    color: Colors.black45,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.45),
                   ),
                 ),
               ],
             ),
           ),
           Icon(Icons.download_rounded, size: 20, color: color),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 180,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.black54,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.poppins(
-                color: Colors.black87,
-                fontSize: 14,
-              ),
-            ),
-          ),
         ],
       ),
     );

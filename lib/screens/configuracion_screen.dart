@@ -258,12 +258,10 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
               Container(
                 padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.white, Colors.grey[50]!],
-                  ),
+                  color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -298,7 +296,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -306,7 +304,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                             'Gestiona tus datos y respaldos',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.black45,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -472,12 +470,12 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           // Loading overlay
           if (isProcessing)
             Container(
-              color: Colors.black26,
+              color: Colors.black.withValues(alpha: 0.4),
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -536,7 +534,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
@@ -544,7 +542,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 description,
                 style: GoogleFonts.poppins(
                   fontSize: 13,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -603,7 +601,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
@@ -611,7 +609,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
                 description,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -638,7 +636,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
               text,
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: Colors.grey[700],
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),

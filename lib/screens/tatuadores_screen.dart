@@ -274,17 +274,23 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          value: _disponibilidad,
+                          initialValue: _disponibilidad,
                           decoration: InputDecoration(
                             labelText: 'Disponibilidad',
                             prefixIcon:
                                 const Icon(Icons.schedule_rounded, size: 22),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white24
+                                    : Colors.grey.shade300,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.grey[50],
+                            fillColor: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF22263A)
+                                : Colors.grey.shade50,
                           ),
                           items: ['Disponible', 'No Disponible', 'En Cita']
                               .map((e) =>
@@ -301,7 +307,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(24),
                     bottomRight: Radius.circular(24),
@@ -354,25 +360,26 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 14),
+      style: GoogleFonts.poppins(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.poppins(fontSize: 14),
         prefixIcon: Icon(icon, size: 22),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.tatuadoresAccent, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: isDark ? const Color(0xFF22263A) : Colors.grey.shade50,
       ),
     );
   }
@@ -385,12 +392,10 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.white, Colors.grey[50]!],
-              ),
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -427,7 +432,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -435,7 +440,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                             '${tatuadoresFiltrados.length} tatuador${tatuadoresFiltrados.length != 1 ? 'es' : ''} activo${tatuadoresFiltrados.length != 1 ? 's' : ''}',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.black45,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -536,7 +541,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
             maxLines: 1,

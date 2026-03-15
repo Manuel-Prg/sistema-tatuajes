@@ -94,38 +94,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : FadeTransition(
-              opacity: _fadeAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildWelcomeHeader(),
-                    const SizedBox(height: 32),
-
-                    // Notificación de citas del día
-                    if (citasHoy.isNotEmpty) _buildCitasDelDia(),
-                    if (citasHoy.isNotEmpty) const SizedBox(height: 24),
-
-                    _buildStatsSection(),
-                    const SizedBox(height: 40),
-
-                    // Gráficas
-                    _buildChartsSection(),
-                    const SizedBox(height: 40),
-
-                    _buildQuickActionsSection(),
-                    const SizedBox(height: 40),
-
-                    // Próximas citas
-                    _buildProximasCitas(),
-                  ],
-                ),
+      body: isLoading ? _buildShimmerLoading() : FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FadeSlideIn(delay: const Duration(milliseconds: 0), child: _buildWelcomeHeader()),
+              const SizedBox(height: 32),
+              if (citasHoy.isNotEmpty) FadeSlideIn(
+                delay: const Duration(milliseconds: 100),
+                child: _buildCitasDelDia(),
               ),
-            ),
+              if (citasHoy.isNotEmpty) const SizedBox(height: 24),
+              FadeSlideIn(delay: const Duration(milliseconds: 150), child: _buildStatsSection()),
+              const SizedBox(height: 40),
+              FadeSlideIn(delay: const Duration(milliseconds: 220), child: _buildChartsSection()),
+              const SizedBox(height: 40),
+              FadeSlideIn(delay: const Duration(milliseconds: 290), child: _buildQuickActionsSection()),
+              const SizedBox(height: 40),
+              FadeSlideIn(delay: const Duration(milliseconds: 360), child: _buildProximasCitas()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ShimmerBox(width: double.infinity, height: 140, borderRadius: BorderRadius.circular(24)),
+          const SizedBox(height: 32),
+          Row(
+            children: List.generate(4, (i) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: i < 3 ? 20 : 0),
+                child: ShimmerBox(width: double.infinity, height: 110, borderRadius: BorderRadius.circular(20)),
+              ),
+            )),
+          ),
+          const SizedBox(height: 40),
+          Row(
+            children: [
+              Expanded(child: ShimmerBox(width: double.infinity, height: 260, borderRadius: BorderRadius.circular(20))),
+              const SizedBox(width: 20),
+              Expanded(child: ShimmerBox(width: double.infinity, height: 260, borderRadius: BorderRadius.circular(20))),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -381,11 +403,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.event_busy_rounded,
-                        size: 60, color: Colors.grey[300]),
+                        size: 60, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                     const SizedBox(height: 16),
                     Text(
                       'No hay citas registradas',
-                      style: GoogleFonts.poppins(color: Colors.grey[600]),
+                      style: GoogleFonts.poppins(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                     ),
                   ],
                 ),
@@ -816,45 +838,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildQuickActionCard(_QuickActionData action) {
-    return SizedBox(
-      width: 160,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: InkWell(
-          onTap: action.onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: action.color.withOpacity(0.3)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Icon(action.icon, color: action.color, size: 36),
-                const SizedBox(height: 12),
-                Text(
-                  action.title,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return _QuickActionCard(action: action);
   }
 }
 
@@ -873,3 +857,94 @@ class _QuickActionData {
     required this.onTap,
   });
 }
+
+class _QuickActionCard extends StatefulWidget {
+  final _QuickActionData action;
+  const _QuickActionCard({required this.action});
+
+  @override
+  State<_QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<_QuickActionCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = widget.action.color;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.action.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          width: 160,
+          transform: Matrix4.translationValues(0, _isHovered ? -5 : 0, 0),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _isHovered ? color.withValues(alpha: isDark ? 0.18 : 0.08) : cs.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: _isHovered
+                  ? color.withValues(alpha: 0.5)
+                  : color.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: _isHovered ? 0.25 : 0.05),
+                blurRadius: _isHovered ? 20 : 8,
+                offset: Offset(0, _isHovered ? 8 : 3),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      color.withValues(alpha: _isHovered ? 0.28 : 0.15),
+                      color.withValues(alpha: _isHovered ? 0.14 : 0.07),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(widget.action.icon, color: color, size: 30),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.action.title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: _isHovered ? color : cs.onSurface,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                widget.action.subtitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: cs.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

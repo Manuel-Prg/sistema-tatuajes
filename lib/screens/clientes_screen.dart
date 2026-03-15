@@ -309,7 +309,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(24),
                     bottomRight: Radius.circular(24),
@@ -365,30 +365,34 @@ class _ClientesScreenState extends State<ClientesScreen> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? Colors.white24 : Colors.grey.shade300;
+    final fillColor = isDark
+        ? AppColors.darkSurfaceElevated
+        : Colors.grey.shade50;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 14),
+      style: GoogleFonts.poppins(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.poppins(fontSize: 14),
         prefixIcon: Icon(icon, size: 22),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.clientesAccent, width: 2),
+          borderSide: const BorderSide(color: AppColors.clientesAccent, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: fillColor,
       ),
     );
   }
@@ -402,15 +406,10 @@ class _ClientesScreenState extends State<ClientesScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Colors.grey[50]!,
-                ],
-              ),
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -448,7 +447,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -456,7 +455,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                             '${clientesFiltrados.length} cliente${clientesFiltrados.length != 1 ? 's' : ''} registrado${clientesFiltrados.length != 1 ? 's' : ''}',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.black45,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -498,11 +497,14 @@ class _ClientesScreenState extends State<ClientesScreen> {
                         actionLabel: 'Agregar Cliente',
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(28),
                         itemCount: clientesFiltrados.length,
                         itemBuilder: (context, index) {
                           final cliente = clientesFiltrados[index];
-                          return _buildClienteCard(cliente);
+                          return FadeSlideIn(
+                            delay: Duration(milliseconds: 40 * index),
+                            child: _buildClienteCard(cliente),
+                          );
                         },
                       ),
           ),
@@ -564,21 +566,21 @@ class _ClientesScreenState extends State<ClientesScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Icon(Icons.email_rounded,
-                          size: 16, color: Colors.grey[600]),
+                          size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
                           cliente['correo'] ?? 'Sin correo',
                           style: GoogleFonts.poppins(
                             fontSize: 13,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -589,13 +591,13 @@ class _ClientesScreenState extends State<ClientesScreen> {
                   Row(
                     children: [
                       Icon(Icons.phone_rounded,
-                          size: 16, color: Colors.grey[600]),
+                          size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                       const SizedBox(width: 8),
                       Text(
                         cliente['telefono'],
                         style: GoogleFonts.poppins(
                           fontSize: 13,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                     ],

@@ -305,7 +305,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(24),
                     bottomRight: Radius.circular(24),
@@ -359,27 +359,27 @@ class _DisenosScreenState extends State<DisenosScreen> {
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
       validator: validator,
-      style: GoogleFonts.poppins(fontSize: 14),
+      style: GoogleFonts.poppins(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.poppins(fontSize: 14),
         prefixIcon: Icon(icon, size: 22),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.disenosAccent, width: 2),
+          borderSide: const BorderSide(color: AppColors.disenosAccent, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: isDark ? const Color(0xFF22263A) : Colors.grey.shade50,
       ),
     );
   }
@@ -392,12 +392,10 @@ class _DisenosScreenState extends State<DisenosScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(32, 24, 32, 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.white, Colors.grey[50]!],
-              ),
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
                 ),
@@ -434,7 +432,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -442,7 +440,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                             '${disenosFiltrados.length} diseño${disenosFiltrados.length != 1 ? 's' : ''} disponible${disenosFiltrados.length != 1 ? 's' : ''}',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.black45,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
                         ],
@@ -482,7 +480,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                         actionLabel: 'Agregar Diseño',
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(32),
+                        padding: const EdgeInsets.all(28),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
@@ -493,7 +491,10 @@ class _DisenosScreenState extends State<DisenosScreen> {
                         itemCount: disenosFiltrados.length,
                         itemBuilder: (context, index) {
                           final diseno = disenosFiltrados[index];
-                          return _buildDisenoCard(diseno);
+                          return FadeSlideIn(
+                            delay: Duration(milliseconds: 50 * index),
+                            child: _buildDisenoCard(diseno),
+                          );
                         },
                       ),
           ),
@@ -529,7 +530,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
               child: Icon(
                 Icons.image_rounded,
                 size: 60,
-                color: AppColors.disenosAccent.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -544,7 +545,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -554,14 +555,14 @@ class _DisenosScreenState extends State<DisenosScreen> {
                   Row(
                     children: [
                       Icon(Icons.category_rounded,
-                          size: 14, color: Colors.grey[600]),
+                          size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           diseno['categoria'],
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -575,14 +576,14 @@ class _DisenosScreenState extends State<DisenosScreen> {
                   Row(
                     children: [
                       Icon(Icons.style_rounded,
-                          size: 14, color: Colors.grey[600]),
+                          size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           diseno['estilo'],
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -106,7 +106,9 @@ class _PagosScreenState extends State<PagosScreen> {
                                       style: GoogleFonts.poppins(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w700,
-                                          color: Colors.black87)),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface)),
                                   const SizedBox(height: 4),
                                   Text(
                                       '${pagosFiltrados.length} transaccion${pagosFiltrados.length != 1 ? 'es' : ''}',
@@ -157,7 +159,7 @@ class _PagosScreenState extends State<PagosScreen> {
                                           fontSize: 14))),
                             ]),
                             const SizedBox(height: 8),
-                            Text('\${totalIngresos.toStringAsFixed(2)} MXN',
+                            Text('MXN ${totalIngresos.toStringAsFixed(2)}',
                                 style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 28,
@@ -195,7 +197,7 @@ class _PagosScreenState extends State<PagosScreen> {
                                     style: GoogleFonts.poppins(
                                         color: Colors.white70, fontSize: 14)),
                                 const SizedBox(height: 4),
-                                Text('\${totalIngresos.toStringAsFixed(2)} MXN',
+                                Text('MXN ${totalIngresos.toStringAsFixed(2)}',
                                     style: GoogleFonts.poppins(
                                         color: Colors.white,
                                         fontSize: 32,
@@ -274,7 +276,7 @@ class _PagosScreenState extends State<PagosScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87),
+                            color: Theme.of(context).colorScheme.onSurface),
                       ),
                     ),
                   ],
@@ -340,7 +342,7 @@ class _PagosScreenState extends State<PagosScreen> {
                         style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87)),
+                            color: Theme.of(context).colorScheme.onSurface)),
                     const SizedBox(height: 6),
                     Row(children: [
                       Icon(Icons.payment_rounded,
