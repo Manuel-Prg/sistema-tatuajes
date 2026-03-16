@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../database_helper.dart';
 import '../widgets/common_widgets.dart';
 import '../theme/app_colors.dart';
+import '../image_helper.dart';
 
 class DisenosScreen extends StatefulWidget {
   const DisenosScreen({super.key});
@@ -30,6 +32,8 @@ class _DisenosScreenState extends State<DisenosScreen> {
     super.initState();
     _loadDisenos();
   }
+
+  String? _imagenPath;
 
   Future<void> _loadDisenos() async {
     setState(() => isLoading = true);
@@ -72,6 +76,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
     _tamanoController.clear();
     _precioController.clear();
     _descripcionController.clear();
+    _imagenPath = null;
   }
 
   Future<void> _agregarDiseno() async {
@@ -83,6 +88,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
         'tamaño': _tamanoController.text,
         'precio': double.tryParse(_precioController.text) ?? 0.0,
         'descripcion': _descripcionController.text,
+        'imagen': _imagenPath ?? '',
       };
 
       await DatabaseHelper.instance.insertDiseno(diseno);
@@ -169,88 +175,148 @@ class _DisenosScreenState extends State<DisenosScreen> {
       _tamanoController.text = diseno['tamaño'] ?? '';
       _precioController.text = diseno['precio']?.toString() ?? '';
       _descripcionController.text = diseno['descripcion'] ?? '';
+      _imagenPath = diseno['imagen'];
     }
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          width: 550,
-          constraints: const BoxConstraints(maxHeight: 750),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.disenosAccent,
-                      AppColors.disenosAccent.withOpacity(0.8),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            width: 550,
+            constraints: const BoxConstraints(maxHeight: 750),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.disenosAccent,
+                        AppColors.disenosAccent.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.palette_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              diseno == null ? 'Nuevo Diseño' : 'Editar Diseño',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Complete la información del diseño',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          _clearForm();
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.palette_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            diseno == null ? 'Nuevo Diseño' : 'Editar Diseño',
-                            style: GoogleFonts.poppins(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Preview
+                              GestureDetector(
+                                onTap: () async {
+                                  final path = await ImageHelper.pickAndSaveImage();
+                                  if (path != null) {
+                                    setStateDialog(() => _imagenPath = path);
+                                  }
+                                },
+                                child: Container(
+                                  height: 160,
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: AppColors.disenosAccent.withOpacity(0.3),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: _imagenPath != null && _imagenPath!.isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(13),
+                                          child: Image.file(
+                                            File(_imagenPath!),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        )
+                                      : Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.add_photo_alternate_rounded,
+                                                size: 48,
+                                                color: AppColors.disenosAccent.withOpacity(0.5)),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Toca para agregar imagen',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                              if (_imagenPath != null && _imagenPath!.isNotEmpty)
+                                TextButton.icon(
+                                  onPressed: () => setStateDialog(() => _imagenPath = null),
+                                  icon: const Icon(Icons.delete_rounded, size: 16, color: Colors.red),
+                                  label: Text('Quitar imagen',
+                                      style: GoogleFonts.poppins(color: Colors.red, fontSize: 12)),
+                                ),
+                            ],
                           ),
-                          Text(
-                            'Complete la información del diseño',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildFormField(
-                          controller: _nombreController,
+                          const SizedBox(height: 16),
+                          _buildFormField(
+                            controller: _nombreController,
                           label: 'Nombre del Diseño',
                           icon: Icons.title_rounded,
                           validator: (value) =>
@@ -348,7 +414,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildFormField({
@@ -484,7 +550,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 4,
-                          childAspectRatio: 0.85,
+                          childAspectRatio: 1.0,
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
@@ -502,7 +568,19 @@ class _DisenosScreenState extends State<DisenosScreen> {
       ),
     );
   }
-
+  Widget _buildImagePlaceholder() {
+    return Container(
+      color: AppColors.disenosAccent.withOpacity(0.15),
+      child: Center(
+        child: Icon(
+          Icons.image_rounded,
+          size: 60,
+          color: AppColors.disenosAccent.withOpacity(0.4),
+        ),
+      ),
+    );
+  }
+  
   Widget _buildDisenoCard(Map<String, dynamic> diseno) {
     return PrimaryCard(
       padding: EdgeInsets.zero,
@@ -513,28 +591,26 @@ class _DisenosScreenState extends State<DisenosScreen> {
           Container(
             height: 160,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.disenosAccent.withOpacity(0.3),
-                  AppColors.disenosAccent.withOpacity(0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
             ),
-            child: Center(
-              child: Icon(
-                Icons.image_rounded,
-                size: 60,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
+              child: diseno['imagen'] != null && (diseno['imagen'] as String).isNotEmpty
+                  ? Image.file(
+                      File(diseno['imagen'] as String),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
+                    )
+                  : _buildImagePlaceholder(),
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(

@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../database_helper.dart';
 import '../widgets/common_widgets.dart';
 import '../theme/app_colors.dart';
+import '../image_helper.dart';
 
 class TatuadoresScreen extends StatefulWidget {
   const TatuadoresScreen({super.key});
@@ -23,6 +25,8 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
   final _especialidadController = TextEditingController();
   final _telefonoController = TextEditingController();
   String _disponibilidad = 'Disponible';
+
+  String? _fotoPath;
 
   @override
   void initState() {
@@ -65,6 +69,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
     _especialidadController.clear();
     _telefonoController.clear();
     _disponibilidad = 'Disponible';
+    _fotoPath = null;
   }
 
   Future<void> _agregarTatuador() async {
@@ -75,6 +80,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
         'especialidad': _especialidadController.text,
         'telefono': _telefonoController.text,
         'disponibilidad': _disponibilidad,
+        'foto': _fotoPath ?? '',
       };
 
       await DatabaseHelper.instance.insertTatuador(tatuador);
@@ -164,86 +170,128 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          width: 550,
-          constraints: const BoxConstraints(maxHeight: 700),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.tatuadoresAccent,
-                      AppColors.tatuadoresAccent.withOpacity(0.8),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            width: 550,
+            constraints: const BoxConstraints(maxHeight: 700),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.tatuadoresAccent,
+                        AppColors.tatuadoresAccent.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.brush_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tatuador == null
+                                  ? 'Nuevo Tatuador'
+                                  : 'Editar Tatuador',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Complete la información del tatuador',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          _clearForm();
+                          Navigator.pop(context);
+                        },
+                      ),
                     ],
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.brush_rounded,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKey,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            tatuador == null
-                                ? 'Nuevo Tatuador'
-                                : 'Editar Tatuador',
-                            style: GoogleFonts.poppins(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          Center(
+                            child: GestureDetector(
+                              onTap: () async {
+                                final path = await ImageHelper.pickAndSaveImage();
+                                if (path != null) {
+                                  setStateDialog(() => _fotoPath = path);
+                                }
+                              },
+                              child: Stack(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 52,
+                                    backgroundColor: AppColors.tatuadoresAccent.withOpacity(0.15),
+                                    backgroundImage: _fotoPath != null && _fotoPath!.isNotEmpty
+                                        ? FileImage(File(_fotoPath!))
+                                        : null,
+                                    child: _fotoPath == null || _fotoPath!.isEmpty
+                                        ? Icon(Icons.person_rounded,
+                                            size: 48,
+                                            color: AppColors.tatuadoresAccent.withOpacity(0.5))
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.tatuadoresAccent,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.white, width: 2),
+                                      ),
+                                      child: const Icon(Icons.camera_alt_rounded,
+                                          size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          Text(
-                            'Complete la información del tatuador',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        _clearForm();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _buildFormField(
-                          controller: _nombreController,
+                          const SizedBox(height: 20),
+                          _buildFormField(
+                            controller: _nombreController,
                           label: 'Nombre',
                           icon: Icons.person_rounded,
                           validator: (value) =>
@@ -274,7 +322,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          initialValue: _disponibilidad,
+                          value: _disponibilidad,
                           decoration: InputDecoration(
                             labelText: 'Disponibilidad',
                             prefixIcon:
@@ -350,7 +398,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildFormField({
@@ -484,7 +532,7 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
-                          childAspectRatio: 1.1,
+                          childAspectRatio: 1.3,
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
                         ),
@@ -505,35 +553,23 @@ class _TatuadoresScreenState extends State<TatuadoresScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.tatuadoresAccent,
-                  AppColors.tatuadoresAccent.withOpacity(0.7),
-                ],
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.tatuadoresAccent.withOpacity(0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Text(
-                tatuador['nombre'][0].toUpperCase(),
-                style: GoogleFonts.poppins(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          CircleAvatar(
+            radius: 45,
+            backgroundColor: AppColors.tatuadoresAccent,
+            backgroundImage: tatuador['foto'] != null &&
+                    (tatuador['foto'] as String).isNotEmpty
+                ? FileImage(File(tatuador['foto'] as String))
+                : null,
+            child: tatuador['foto'] == null || (tatuador['foto'] as String).isEmpty
+                ? Text(
+                    tatuador['nombre'][0].toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(height: 16),
           Text(

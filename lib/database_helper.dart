@@ -24,9 +24,21 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
+  }
+  //actualizar base de datos
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      try {
+        await db.execute("ALTER TABLE tatuadores ADD COLUMN foto TEXT DEFAULT ''");
+      } catch (_) {}
+      try {
+        await db.execute("ALTER TABLE diseños ADD COLUMN imagen TEXT DEFAULT ''");
+      } catch (_) {}
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -35,7 +47,7 @@ class DatabaseHelper {
     const realType = 'REAL NOT NULL';
     const textTypeNullable = 'TEXT';
 
-    // Tabla Clientes
+    //tabla clientes
     await db.execute('''
       CREATE TABLE clientes (
         id_cliente $idType,
@@ -46,8 +58,7 @@ class DatabaseHelper {
         fecha_registro TEXT DEFAULT CURRENT_TIMESTAMP
       )
     ''');
-
-    // Tabla Tatuadores
+    //tabla tatuadores
     await db.execute('''
       CREATE TABLE tatuadores (
         id_tatuador $idType,
@@ -55,11 +66,11 @@ class DatabaseHelper {
         apellido $textType,
         especialidad $textTypeNullable,
         telefono $textType,
-        disponibilidad TEXT DEFAULT 'Disponible'
+        disponibilidad TEXT DEFAULT 'Disponible',
+        foto TEXT DEFAULT ''
       )
     ''');
-
-    // Tabla Diseños
+    //tabla diseños
     await db.execute('''
       CREATE TABLE diseños (
         id_diseño $idType,
@@ -68,12 +79,11 @@ class DatabaseHelper {
         estilo $textTypeNullable,
         tamaño $textTypeNullable,
         precio $realType,
-        ruta_imagen $textTypeNullable,
-        descripcion $textTypeNullable
+        descripcion $textTypeNullable,
+        imagen TEXT DEFAULT ''
       )
     ''');
-
-    // Tabla Citas
+    //tabla citas
     await db.execute('''
       CREATE TABLE citas (
         id_cita $idType,
@@ -89,8 +99,7 @@ class DatabaseHelper {
         FOREIGN KEY (id_diseño) REFERENCES diseños(id_diseño)
       )
     ''');
-
-    // Tabla Pagos
+    //tabla pagos
     await db.execute('''
       CREATE TABLE pagos (
         id_pago $idType,

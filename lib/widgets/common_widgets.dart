@@ -542,7 +542,7 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
         duration: const Duration(milliseconds: 250),
         transform: Matrix4.translationValues(0, _isHovered ? -6 : 0, 0),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cs.surface,
             borderRadius: BorderRadius.circular(20),
@@ -628,23 +628,29 @@ class _AnimatedStatCardState extends State<AnimatedStatCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      widget.value,
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
-                        letterSpacing: -0.8,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        widget.value,
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,  // reducido de 28
+                          fontWeight: FontWeight.w800,
+                          color: cs.onSurface,
+                          letterSpacing: -0.8,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       widget.label,
                       style: GoogleFonts.poppins(
-                        fontSize: 12.5,
+                        fontSize: 12,
                         color: cs.onSurface.withValues(alpha: 0.45),
                         fontWeight: FontWeight.w500,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ],
                 ),

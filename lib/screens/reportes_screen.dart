@@ -472,7 +472,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                     crossAxisCount: 4,
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
-                    childAspectRatio: 1.4,
+                    childAspectRatio: 2.2,
                     children: [
                       AnimatedStatCard(
                         label: 'Clientes',

@@ -26,16 +26,21 @@ Future<void> main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
 
-    // Maximizar la ventana al iniciar
     await windowManager.ensureInitialized();
+
     const windowOptions = WindowOptions(
       minimumSize: Size(1024, 700),
       title: 'InkManager – Sistema de Gestión de Tatuajes',
+      skipTaskbar: false,
     );
+
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.maximize();
+      //await windowManager.maximize();
       await windowManager.show();
       await windowManager.focus();
+
+      //forzar la pantalla completa en windows
+      //await windowManager.setSkipTaskbar(false);
     });
   }
 
@@ -233,7 +238,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WindowListener {
   int _selectedIndex = 0;
   int citasHoyCount = 0;
   bool _sidebarCollapsed = false;
@@ -244,9 +249,26 @@ class _MainScreenState extends State<MainScreen>
   @override
   void initState() {
     super.initState();
+    windowManager.addListener(this);
     _loadCitasHoy();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(const Duration(milliseconds: 500));
+      await windowManager.maximize();
+    });
   }
 
+  @override
+  void dispose() {
+    windowManager.removeListener(this);  
+    super.dispose();
+  }
+  
+  @override
+  void onWindowShow() {
+    windowManager.maximize();
+  }
+  
   Future<void> _loadCitasHoy() async {
     try {
       final citas = await DatabaseHelper.instance.getCitas();

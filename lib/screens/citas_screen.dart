@@ -264,7 +264,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        initialValue: selectedCliente,
+                        value: selectedCliente,
                         decoration: InputDecoration(
                           labelText: 'Cliente',
                           prefixIcon: const Icon(Icons.person_rounded),
@@ -283,7 +283,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        initialValue: selectedTatuador,
+                        value: selectedTatuador,
                         decoration: InputDecoration(
                           labelText: 'Tatuador',
                           prefixIcon: const Icon(Icons.brush_rounded),
@@ -302,7 +302,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
-                        initialValue: selectedDiseno,
+                        value: selectedDiseno,
                         decoration: InputDecoration(
                           labelText: 'Diseño (opcional)',
                           prefixIcon: const Icon(Icons.palette_rounded),
@@ -321,7 +321,7 @@ class _CitasScreenState extends State<CitasScreen>
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
-                        initialValue: estado,
+                        value: estado,
                         decoration: InputDecoration(
                           labelText: 'Estado',
                           prefixIcon: const Icon(Icons.flag_rounded),
