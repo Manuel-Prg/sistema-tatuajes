@@ -17,17 +17,23 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    try {
+      final dbPath = await getDatabasesPath();
+      final path = join(dbPath, filePath);
 
-    print('Ruta de la Base de Datos: $path');
+      print('--- INICIALIZANDO BD ---');
+      print('Ruta: $path');
 
-    return await openDatabase(
-      path,
-      version: 2,
-      onCreate: _createDB,
-      onUpgrade: _onUpgrade,
-    );
+      return await openDatabase(
+        path,
+        version: 2,
+        onCreate: _createDB,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      print('❌ ERROR CRITICO AL INICIALIZAR BD: $e');
+      rethrow;
+    }
   }
   //actualizar base de datos
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -36,7 +42,7 @@ class DatabaseHelper {
         await db.execute("ALTER TABLE tatuadores ADD COLUMN foto TEXT DEFAULT ''");
       } catch (_) {}
       try {
-        await db.execute("ALTER TABLE diseños ADD COLUMN imagen TEXT DEFAULT ''");
+        await db.execute("ALTER TABLE disenos ADD COLUMN imagen TEXT DEFAULT ''");
       } catch (_) {}
     }
   }
@@ -72,12 +78,12 @@ class DatabaseHelper {
     ''');
     //tabla diseños
     await db.execute('''
-      CREATE TABLE diseños (
-        id_diseño $idType,
+      CREATE TABLE disenos (
+        id_diseno $idType,
         nombre $textType,
         categoria $textTypeNullable,
         estilo $textTypeNullable,
-        tamaño $textTypeNullable,
+        tamano $textTypeNullable,
         precio $realType,
         descripcion $textTypeNullable,
         imagen TEXT DEFAULT ''
@@ -91,12 +97,12 @@ class DatabaseHelper {
         hora $textType,
         id_cliente INTEGER NOT NULL,
         id_tatuador INTEGER NOT NULL,
-        id_diseño INTEGER,
+        id_diseno INTEGER,
         estado TEXT DEFAULT 'Pendiente',
         notas $textTypeNullable,
         FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
         FOREIGN KEY (id_tatuador) REFERENCES tatuadores(id_tatuador),
-        FOREIGN KEY (id_diseño) REFERENCES diseños(id_diseño)
+        FOREIGN KEY (id_diseno) REFERENCES disenos(id_diseno)
       )
     ''');
     //tabla pagos
@@ -252,7 +258,8 @@ class DatabaseHelper {
   /// Obtener directorio de documentos (compatible con todas las plataformas)
   Future<String> getApplicationDocumentsPath() async {
     if (Platform.isWindows) {
-      return Platform.environment['USERPROFILE'] ?? '';
+      final String home = Platform.environment['USERPROFILE'] ?? '';
+      return join(home, 'Documents', 'SistemaTatuajes');
     } else if (Platform.isLinux) {
       return Platform.environment['HOME'] ?? '';
     } else if (Platform.isMacOS) {
@@ -359,20 +366,20 @@ class DatabaseHelper {
 
   Future<int> insertDiseno(Map<String, dynamic> diseno) async {
     final db = await instance.database;
-    return await db.insert('diseños', diseno);
+    return await db.insert('disenos', diseno);
   }
 
   Future<List<Map<String, dynamic>>> getDisenos() async {
     final db = await instance.database;
-    return await db.query('diseños', orderBy: 'id_diseño DESC');
+    return await db.query('disenos', orderBy: 'id_diseno DESC');
   }
 
   Future<int> updateDiseno(int id, Map<String, dynamic> diseno) async {
     final db = await instance.database;
     return await db.update(
-      'diseños',
+      'disenos',
       diseno,
-      where: 'id_diseño = ?',
+      where: 'id_diseno = ?',
       whereArgs: [id],
     );
   }
@@ -380,8 +387,8 @@ class DatabaseHelper {
   Future<int> deleteDiseno(int id) async {
     final db = await instance.database;
     return await db.delete(
-      'diseños',
-      where: 'id_diseño = ?',
+      'disenos',
+      where: 'id_diseno = ?',
       whereArgs: [id],
     );
   }
@@ -401,11 +408,11 @@ class DatabaseHelper {
              t.nombre || ' ' || t.apellido as tatuador,
              d.nombre as diseño,
              c.estado, c.notas,
-             c.id_cliente, c.id_tatuador, c.id_diseño
+             c.id_cliente, c.id_tatuador, c.id_diseno
       FROM citas c
       LEFT JOIN clientes cl ON c.id_cliente = cl.id_cliente
       LEFT JOIN tatuadores t ON c.id_tatuador = t.id_tatuador
-      LEFT JOIN diseños d ON c.id_diseño = d.id_diseño
+      LEFT JOIN disenos d ON c.id_diseno = d.id_diseno
       ORDER BY c.fecha DESC, c.hora DESC
     ''');
   }
@@ -485,13 +492,13 @@ class DatabaseHelper {
     final tatuadores =
         await db.rawQuery('SELECT COUNT(*) as count FROM tatuadores');
     final citas = await db.rawQuery('SELECT COUNT(*) as count FROM citas');
-    final disenos = await db.rawQuery('SELECT COUNT(*) as count FROM diseños');
+    final disenos = await db.rawQuery('SELECT COUNT(*) as count FROM disenos');
 
     return {
-      'clientes': clientes.first['count'] as int,
-      'tatuadores': tatuadores.first['count'] as int,
-      'citas': citas.first['count'] as int,
-      'diseños': disenos.first['count'] as int,
+      'clientes': Sqflite.firstIntValue(clientes) ?? 0,
+      'tatuadores': Sqflite.firstIntValue(tatuadores) ?? 0,
+      'citas': Sqflite.firstIntValue(citas) ?? 0,
+      'diseños': Sqflite.firstIntValue(disenos) ?? 0,
     };
   }
 

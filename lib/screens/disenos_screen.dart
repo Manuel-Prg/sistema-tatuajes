@@ -85,7 +85,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
         'nombre': _nombreController.text,
         'categoria': _categoriaController.text,
         'estilo': _estiloController.text,
-        'tamaño': _tamanoController.text,
+        'tamano': _tamanoController.text,
         'precio': double.tryParse(_precioController.text) ?? 0.0,
         'descripcion': _descripcionController.text,
         'imagen': _imagenPath ?? '',
@@ -172,7 +172,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
       _nombreController.text = diseno['nombre'] ?? '';
       _categoriaController.text = diseno['categoria'] ?? '';
       _estiloController.text = diseno['estilo'] ?? '';
-      _tamanoController.text = diseno['tamaño'] ?? '';
+      _tamanoController.text = diseno['tamano'] ?? '';
       _precioController.text = diseno['precio']?.toString() ?? '';
       _descripcionController.text = diseno['descripcion'] ?? '';
       _imagenPath = diseno['imagen'];
@@ -703,7 +703,7 @@ class _DisenosScreenState extends State<DisenosScreen> {
                           icon: const Icon(Icons.delete_rounded, size: 20),
                           color: Colors.red,
                           onPressed: () => _eliminarDiseno(
-                            diseno['id_diseño'],
+                            diseno['id_diseno'],
                             diseno['nombre'] ?? 'este diseño',
                           ),
                           tooltip: 'Eliminar',

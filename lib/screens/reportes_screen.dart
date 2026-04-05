@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path/path.dart' as p;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import '../database_helper.dart';
@@ -279,7 +280,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
         await directory.create(recursive: true);
       }
 
-      final path = '$directoryPath\\$nombreArchivo';
+      final path = p.join(directoryPath, nombreArchivo);
 
       // Crear archivo
       final file = File(path);
@@ -296,7 +297,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
     if (Platform.isWindows) {
       // En Windows, usar la carpeta Documentos del usuario
       final String home = Platform.environment['USERPROFILE'] ?? '';
-      return '$home\\Documents\\SistemaTatuajes';
+      return p.join(home, 'Documents', 'SistemaTatuajes');
     } else {
       // En otros sistemas, usar path_provider
       final directory = await getApplicationDocumentsDirectory();

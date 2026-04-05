@@ -53,36 +53,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _loadData() async {
-    final estadisticas = await DatabaseHelper.instance.getEstadisticas();
-    final ingresos = await DatabaseHelper.instance.getTotalIngresos();
-    final todasCitas = await DatabaseHelper.instance.getCitas();
+    try {
+      final estadisticas = await DatabaseHelper.instance.getEstadisticas();
+      final ingresos = await DatabaseHelper.instance.getTotalIngresos();
+      final todasCitas = await DatabaseHelper.instance.getCitas();
 
-    // Filtrar citas de hoy
-    final hoy = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final citasDeHoy =
-        todasCitas.where((cita) => cita['fecha'] == hoy).toList();
+      // Filtrar citas de hoy
+      final hoy = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final citasDeHoy =
+          todasCitas.where((cita) => cita['fecha'] == hoy).toList();
 
-    // Próximas 3 citas
-    final ahora = DateTime.now();
-    final proximas = todasCitas
-        .where((cita) {
-          final fechaCita = DateTime.tryParse(cita['fecha'] ?? '');
-          return fechaCita != null && fechaCita.isAfter(ahora);
-        })
-        .take(3)
-        .toList();
+      // Próximas 3 citas
+      final ahora = DateTime.now();
+      final proximas = todasCitas
+          .where((cita) {
+            final fechaCita = DateTime.tryParse(cita['fecha'] ?? '');
+            return fechaCita != null && fechaCita.isAfter(ahora);
+          })
+          .take(3)
+          .toList();
 
-    setState(() {
-      stats = estadisticas;
-      totalIngresos = ingresos;
-      citas.clear();
-      citas.addAll(todasCitas);
-      citasHoy = citasDeHoy;
-      proximasCitas = proximas;
-      isLoading = false;
-    });
-
-    _fadeController.forward();
+      if (mounted) {
+        setState(() {
+          stats = estadisticas;
+          totalIngresos = ingresos;
+          citas.clear();
+          citas.addAll(todasCitas);
+          citasHoy = citasDeHoy;
+          proximasCitas = proximas;
+          isLoading = false;
+        });
+        _fadeController.forward();
+      }
+    } catch (e) {
+      debugPrint('Error al cargar datos: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   void _navigateTo(int index) {
