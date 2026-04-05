@@ -1,0 +1,15 @@
+{
+  "version": 3,
+  "skills": {
+    "Flutter": {
+      "source": "openclaw/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/openclaw/skills.git",
+      "skillPath": "skills/ivangdavila/flutter/SKILL.md",
+      "skillFolderHash": "",
+      "installedAt": "2026-04-05T02:47:41.617Z",
+      "updatedAt": "2026-04-05T02:47:41.617Z"
+    }
+  },
+  "dismissed": {}
+}
