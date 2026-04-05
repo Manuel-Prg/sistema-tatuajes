@@ -2,20 +2,19 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import 'dart:developer' as developer;
+import 'package:path_provider/path_provider.dart';
 
 class ImageHelper {
-  // Carpeta donde se guardarán las imágenes
-  static Future<String> get _imagesDir async {
-    final String home = Platform.environment['USERPROFILE'] ??
-        Platform.environment['HOME'] ?? '';
-    final dir = Directory('$home\\Documents\\SistemaTatuajes\\images');
+  static Future<String> _imagesDir() async {
+    final base = await getApplicationDocumentsDirectory();
+    final dir = Directory(p.join(base.path, 'SistemaTatuajes', 'images'));
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
     return dir.path;
   }
 
-  // Seleccionar y copiar imagen, retorna la ruta guardada
+  /// Selecciona y copia una imagen; devuelve la ruta guardada.
   static Future<String?> pickAndSaveImage() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -28,8 +27,8 @@ class ImageHelper {
       final sourceFile = File(result.files.single.path!);
       final ext = p.extension(sourceFile.path);
       final fileName = 'img_${DateTime.now().millisecondsSinceEpoch}$ext';
-      final destDir = await _imagesDir;
-      final destPath = '$destDir\\$fileName';
+      final destDir = await _imagesDir();
+      final destPath = p.join(destDir, fileName);
 
       await sourceFile.copy(destPath);
       return destPath;
@@ -39,7 +38,6 @@ class ImageHelper {
     }
   }
 
-  // Eliminar imagen del sistema de archivos
   static Future<void> deleteImage(String? path) async {
     if (path == null || path.isEmpty) return;
     try {

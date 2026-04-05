@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/common_widgets.dart';
 import '../database_helper.dart';
 import '../theme/app_colors.dart';
+import 'cliente_historial_dialog.dart';
+
+enum _ClienteOrden { nombreAZ, registroReciente, registroAntiguo }
 
 class ClientesScreen extends StatefulWidget {
   const ClientesScreen({super.key});
@@ -16,6 +19,8 @@ class _ClientesScreenState extends State<ClientesScreen> {
   List<Map<String, dynamic>> clientesFiltrados = [];
   bool isLoading = true;
   String searchQuery = '';
+  _ClienteOrden _orden = _ClienteOrden.nombreAZ;
+  int? _editandoIdCliente;
 
   final _formKey = GlobalKey<FormState>();
   final _nombreController = TextEditingController();
@@ -34,49 +39,83 @@ class _ClientesScreenState extends State<ClientesScreen> {
     final data = await DatabaseHelper.instance.getClientes();
     setState(() {
       clientes = data;
-      clientesFiltrados = data;
       isLoading = false;
     });
+    _aplicarOrdenYFiltro();
   }
 
-  void _filterClientes(String query) {
+  void _aplicarOrdenYFiltro() {
+    final sorted = List<Map<String, dynamic>>.from(clientes);
+    switch (_orden) {
+      case _ClienteOrden.nombreAZ:
+        sorted.sort((a, b) {
+          final na = '${a['nombre']} ${a['apellido']}'.toLowerCase();
+          final nb = '${b['nombre']} ${b['apellido']}'.toLowerCase();
+          return na.compareTo(nb);
+        });
+        break;
+      case _ClienteOrden.registroReciente:
+        sorted.sort((a, b) {
+          final fa = (a['fecha_registro'] ?? '').toString();
+          final fb = (b['fecha_registro'] ?? '').toString();
+          return fb.compareTo(fa);
+        });
+        break;
+      case _ClienteOrden.registroAntiguo:
+        sorted.sort((a, b) {
+          final fa = (a['fecha_registro'] ?? '').toString();
+          final fb = (b['fecha_registro'] ?? '').toString();
+          return fa.compareTo(fb);
+        });
+        break;
+    }
+
     setState(() {
-      searchQuery = query;
-      if (query.isEmpty) {
-        clientesFiltrados = clientes;
+      if (searchQuery.isEmpty) {
+        clientesFiltrados = sorted;
       } else {
-        clientesFiltrados = clientes.where((cliente) {
+        final q = searchQuery.toLowerCase();
+        clientesFiltrados = sorted.where((cliente) {
           final nombreCompleto =
               '${cliente['nombre']} ${cliente['apellido']}'.toLowerCase();
           final correo = (cliente['correo'] ?? '').toLowerCase();
-          final telefono = cliente['telefono'].toLowerCase();
-          final searchLower = query.toLowerCase();
-
-          return nombreCompleto.contains(searchLower) ||
-              correo.contains(searchLower) ||
-              telefono.contains(searchLower);
+          final telefono = cliente['telefono'].toString().toLowerCase();
+          return nombreCompleto.contains(q) ||
+              correo.contains(q) ||
+              telefono.contains(q);
         }).toList();
       }
     });
   }
 
+  void _filterClientes(String query) {
+    searchQuery = query;
+    _aplicarOrdenYFiltro();
+  }
+
   void _clearForm() {
+    _editandoIdCliente = null;
     _nombreController.clear();
     _apellidoController.clear();
     _correoController.clear();
     _telefonoController.clear();
   }
 
-  Future<void> _agregarCliente() async {
+  Future<void> _guardarCliente() async {
     if (_formKey.currentState!.validate()) {
+      final eraEdicion = _editandoIdCliente != null;
       final cliente = {
-        'nombre': _nombreController.text,
-        'apellido': _apellidoController.text,
-        'correo': _correoController.text,
-        'telefono': _telefonoController.text,
+        'nombre': _nombreController.text.trim(),
+        'apellido': _apellidoController.text.trim(),
+        'correo': _correoController.text.trim(),
+        'telefono': _telefonoController.text.trim(),
       };
 
-      await DatabaseHelper.instance.insertCliente(cliente);
+      if (_editandoIdCliente != null) {
+        await DatabaseHelper.instance.updateCliente(_editandoIdCliente!, cliente);
+      } else {
+        await DatabaseHelper.instance.insertCliente(cliente);
+      }
       _clearForm();
       _loadClientes();
 
@@ -88,7 +127,10 @@ class _ClientesScreenState extends State<ClientesScreen> {
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                Text('Cliente agregado exitosamente',
+                Text(
+                    eraEdicion
+                        ? 'Cliente actualizado'
+                        : 'Cliente agregado exitosamente',
                     style: GoogleFonts.poppins()),
               ],
             ),
@@ -172,10 +214,13 @@ class _ClientesScreenState extends State<ClientesScreen> {
 
   void _mostrarFormulario([Map<String, dynamic>? cliente]) {
     if (cliente != null) {
+      _editandoIdCliente = cliente['id_cliente'] as int?;
       _nombreController.text = cliente['nombre'];
       _apellidoController.text = cliente['apellido'];
       _correoController.text = cliente['correo'] ?? '';
       _telefonoController.text = cliente['telefono'];
+    } else {
+      _editandoIdCliente = null;
     }
 
     showDialog(
@@ -332,7 +377,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: _agregarCliente,
+                      onPressed: _guardarCliente,
                       icon: const Icon(Icons.save_rounded),
                       label: const Text('Guardar'),
                       style: ElevatedButton.styleFrom(
@@ -469,10 +514,49 @@ class _ClientesScreenState extends State<ClientesScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                SearchField(
-                  hintText: 'Buscar por nombre, correo o teléfono...',
-                  onChanged: _filterClientes,
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SearchField(
+                        hintText: 'Buscar por nombre, correo o teléfono...',
+                        onChanged: _filterClientes,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    SizedBox(
+                      width: 220,
+                      child: DropdownButtonFormField<_ClienteOrden>(
+                        value: _orden,
+                        decoration: InputDecoration(
+                          labelText: 'Ordenar',
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: _ClienteOrden.nombreAZ,
+                            child: Text('Nombre A–Z'),
+                          ),
+                          DropdownMenuItem(
+                            value: _ClienteOrden.registroReciente,
+                            child: Text('Registro: reciente'),
+                          ),
+                          DropdownMenuItem(
+                            value: _ClienteOrden.registroAntiguo,
+                            child: Text('Registro: antiguo'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() => _orden = v);
+                          _aplicarOrdenYFiltro();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -610,6 +694,19 @@ class _ClientesScreenState extends State<ClientesScreen> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  icon: const Icon(Icons.medical_information_outlined),
+                  color: AppColors.clientesAccent,
+                  tooltip: 'Historial clínico / visual',
+                  onPressed: () {
+                    showClienteHistorialDialog(
+                      context,
+                      idCliente: cliente['id_cliente'] as int,
+                      nombreCompleto:
+                          '${cliente['nombre']} ${cliente['apellido']}',
+                    );
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.edit_rounded),
                   color: AppColors.clientesAccent,

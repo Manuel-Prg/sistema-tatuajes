@@ -8,12 +8,23 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
+  /// Solo para tests: usar otro nombre de archivo y reiniciar conexión.
+  static String? testDbFileName;
+
   DatabaseHelper._init();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('tatuajes.db');
+    _database = await _initDB(testDbFileName ?? 'tatuajes.db');
     return _database!;
+  }
+
+  static Future<void> resetInstanceForTest() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+    testDbFileName = null;
   }
 
   Future<Database> _initDB(String filePath) async {
@@ -26,7 +37,7 @@ class DatabaseHelper {
 
       return await openDatabase(
         path,
-        version: 2,
+        version: 3,
         onCreate: _createDB,
         onUpgrade: _onUpgrade,
       );
@@ -44,6 +55,33 @@ class DatabaseHelper {
       try {
         await db.execute("ALTER TABLE disenos ADD COLUMN imagen TEXT DEFAULT ''");
       } catch (_) {}
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS historial_cliente (
+          id_historial INTEGER PRIMARY KEY AUTOINCREMENT,
+          id_cliente INTEGER NOT NULL,
+          fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+          titulo TEXT NOT NULL,
+          notas TEXT,
+          imagen TEXT DEFAULT '',
+          FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS depositos (
+          id_deposito INTEGER PRIMARY KEY AUTOINCREMENT,
+          id_cliente INTEGER NOT NULL,
+          id_cita INTEGER,
+          monto REAL NOT NULL,
+          fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+          metodo_pago TEXT,
+          estado TEXT DEFAULT 'Recibido',
+          notas TEXT,
+          FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+          FOREIGN KEY (id_cita) REFERENCES citas(id_cita)
+        )
+      ''');
     }
   }
 
@@ -115,6 +153,33 @@ class DatabaseHelper {
         id_cita INTEGER NOT NULL,
         metodo_pago $textTypeNullable,
         estado TEXT DEFAULT 'Pendiente',
+        FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
+        FOREIGN KEY (id_cita) REFERENCES citas(id_cita)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE historial_cliente (
+        id_historial $idType,
+        id_cliente INTEGER NOT NULL,
+        fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+        titulo $textType,
+        notas $textTypeNullable,
+        imagen TEXT DEFAULT '',
+        FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE depositos (
+        id_deposito $idType,
+        id_cliente INTEGER NOT NULL,
+        id_cita INTEGER,
+        monto $realType,
+        fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+        metodo_pago $textTypeNullable,
+        estado TEXT DEFAULT 'Recibido',
+        notas $textTypeNullable,
         FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
         FOREIGN KEY (id_cita) REFERENCES citas(id_cita)
       )
@@ -482,6 +547,90 @@ class DatabaseHelper {
     );
   }
 
+  // ==================== HISTORIAL CLÍNICO / VISUAL ====================
+
+  Future<int> insertHistorialCliente(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('historial_cliente', row);
+  }
+
+  Future<List<Map<String, dynamic>>> getHistorialCliente(int idCliente) async {
+    final db = await instance.database;
+    return await db.query(
+      'historial_cliente',
+      where: 'id_cliente = ?',
+      whereArgs: [idCliente],
+      orderBy: 'fecha DESC, id_historial DESC',
+    );
+  }
+
+  Future<int> deleteHistorialCliente(int idHistorial) async {
+    final db = await instance.database;
+    return await db.delete(
+      'historial_cliente',
+      where: 'id_historial = ?',
+      whereArgs: [idHistorial],
+    );
+  }
+
+  // ==================== DEPÓSITOS ====================
+
+  Future<int> insertDeposito(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('depositos', row);
+  }
+
+  Future<List<Map<String, dynamic>>> getDepositos() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT d.id_deposito, d.id_cliente, d.id_cita, d.monto, d.fecha,
+             d.metodo_pago, d.estado, d.notas,
+             cl.nombre || ' ' || cl.apellido AS cliente
+      FROM depositos d
+      LEFT JOIN clientes cl ON d.id_cliente = cl.id_cliente
+      ORDER BY d.fecha DESC, d.id_deposito DESC
+    ''');
+  }
+
+  Future<int> updateDeposito(int id, Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.update(
+      'depositos',
+      row,
+      where: 'id_deposito = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteDeposito(int id) async {
+    final db = await instance.database;
+    return await db.delete(
+      'depositos',
+      where: 'id_deposito = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<double> getTotalDepositosRecibidos() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      "SELECT SUM(monto) as total FROM depositos WHERE estado = 'Recibido'");
+    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  /// Citas de un cliente (para vincular depósitos).
+  Future<List<Map<String, dynamic>>> getCitasPorCliente(int idCliente) async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT c.id_cita, c.fecha, c.hora, c.estado,
+             t.nombre || ' ' || t.apellido AS tatuador
+      FROM citas c
+      LEFT JOIN tatuadores t ON c.id_tatuador = t.id_tatuador
+      WHERE c.id_cliente = ?
+      ORDER BY c.fecha DESC, c.hora DESC
+    ''', [idCliente]);
+  }
+
   // ==================== ESTADÍSTICAS ====================
 
   Future<Map<String, int>> getEstadisticas() async {
@@ -493,12 +642,18 @@ class DatabaseHelper {
         await db.rawQuery('SELECT COUNT(*) as count FROM tatuadores');
     final citas = await db.rawQuery('SELECT COUNT(*) as count FROM citas');
     final disenos = await db.rawQuery('SELECT COUNT(*) as count FROM disenos');
+    final depositos =
+        await db.rawQuery('SELECT COUNT(*) as count FROM depositos');
+    final historial =
+        await db.rawQuery('SELECT COUNT(*) as count FROM historial_cliente');
 
     return {
       'clientes': Sqflite.firstIntValue(clientes) ?? 0,
       'tatuadores': Sqflite.firstIntValue(tatuadores) ?? 0,
       'citas': Sqflite.firstIntValue(citas) ?? 0,
       'diseños': Sqflite.firstIntValue(disenos) ?? 0,
+      'depositos': Sqflite.firstIntValue(depositos) ?? 0,
+      'historial': Sqflite.firstIntValue(historial) ?? 0,
     };
   }
 

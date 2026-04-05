@@ -33,6 +33,7 @@ dependencies:
   provider: ^6.1.1
   shared_preferences: ^2.2.2
   window_manager: ^0.4.3
+  pdf: ^3.11.1
 
 dev_dependencies:
   flutter_test:

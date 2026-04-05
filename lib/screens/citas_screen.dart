@@ -13,8 +13,7 @@ class CitasScreen extends StatefulWidget {
   State<CitasScreen> createState() => _CitasScreenState();
 }
 
-class _CitasScreenState extends State<CitasScreen>
-    with TickerProviderStateMixin {
+class _CitasScreenState extends State<CitasScreen> {
   List<Map<String, dynamic>> citas = [];
   List<Map<String, dynamic>> citasFiltradas = [];
   List<Map<String, dynamic>> clientes = [];
@@ -22,6 +21,8 @@ class _CitasScreenState extends State<CitasScreen>
   List<Map<String, dynamic>> disenos = [];
   bool isLoading = true;
   String searchQuery = '';
+  String? _filtroEstado; // null = todos
+  int? _filtroTatuador; // null = todos
 
   // Variables del calendario
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -29,20 +30,12 @@ class _CitasScreenState extends State<CitasScreen>
   DateTime? _selectedDay;
   Map<DateTime, List<Map<String, dynamic>>> _citasPorFecha = {};
   bool _mostrarCalendario = true;
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _selectedDay = _focusedDay;
     _loadAll();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadAll() async {
@@ -53,55 +46,66 @@ class _CitasScreenState extends State<CitasScreen>
       final t = await DatabaseHelper.instance.getTatuadores();
       final d = await DatabaseHelper.instance.getDisenos();
 
-      // Organizar citas por fecha
-      Map<DateTime, List<Map<String, dynamic>>> citasMap = {};
-      for (var cita in c) {
-        final fechaStr = cita['fecha'] as String?;
-        if (fechaStr != null) {
-          final fecha = DateTime.tryParse(fechaStr);
-          if (fecha != null) {
-            final fechaNormalizada =
-                DateTime(fecha.year, fecha.month, fecha.day);
-            if (citasMap[fechaNormalizada] == null) {
-              citasMap[fechaNormalizada] = [];
-            }
-            citasMap[fechaNormalizada]!.add(cita);
-          }
-        }
-      }
-
       setState(() {
         citas = c;
-        citasFiltradas = c;
         clientes = cl;
         tatuadores = t;
         disenos = d;
-        _citasPorFecha = citasMap;
         isLoading = false;
       });
+      _aplicarFiltrosCitas();
     } catch (e) {
       setState(() => isLoading = false);
     }
   }
 
-  void _filterCitas(String query) {
-    setState(() {
-      searchQuery = query;
-      if (query.isEmpty) {
-        citasFiltradas = citas;
-      } else {
-        citasFiltradas = citas.where((cita) {
-          final cliente = (cita['cliente'] ?? '').toLowerCase();
-          final tatuador = (cita['tatuador'] ?? '').toLowerCase();
-          final estado = (cita['estado'] ?? '').toLowerCase();
-          final searchLower = query.toLowerCase();
-
-          return cliente.contains(searchLower) ||
-              tatuador.contains(searchLower) ||
-              estado.contains(searchLower);
-        }).toList();
+  void _rebuildCitasPorFecha(List<Map<String, dynamic>> lista) {
+    final Map<DateTime, List<Map<String, dynamic>>> citasMap = {};
+    for (var cita in lista) {
+      final fechaStr = cita['fecha'] as String?;
+      if (fechaStr != null) {
+        final fecha = DateTime.tryParse(fechaStr);
+        if (fecha != null) {
+          final fechaNormalizada =
+              DateTime(fecha.year, fecha.month, fecha.day);
+          citasMap.putIfAbsent(fechaNormalizada, () => []).add(cita);
+        }
       }
+    }
+    _citasPorFecha = citasMap;
+  }
+
+  void _aplicarFiltrosCitas() {
+    var lista = List<Map<String, dynamic>>.from(citas);
+    if (_filtroEstado != null && _filtroEstado!.isNotEmpty) {
+      lista = lista.where((c) => c['estado'] == _filtroEstado).toList();
+    }
+    if (_filtroTatuador != null) {
+      lista =
+          lista.where((c) => c['id_tatuador'] == _filtroTatuador).toList();
+    }
+    if (searchQuery.isNotEmpty) {
+      final q = searchQuery.toLowerCase();
+      lista = lista.where((cita) {
+        final cliente = (cita['cliente'] ?? '').toLowerCase();
+        final tatuador = (cita['tatuador'] ?? '').toLowerCase();
+        final estado = (cita['estado'] ?? '').toLowerCase();
+        final diseno = (cita['diseño'] ?? '').toString().toLowerCase();
+        return cliente.contains(q) ||
+            tatuador.contains(q) ||
+            estado.contains(q) ||
+            diseno.contains(q);
+      }).toList();
+    }
+    setState(() {
+      citasFiltradas = lista;
+      _rebuildCitasPorFecha(lista);
     });
+  }
+
+  void _filterCitas(String query) {
+    searchQuery = query;
+    _aplicarFiltrosCitas();
   }
 
   List<Map<String, dynamic>> _getCitasDelDia(DateTime day) {
@@ -132,7 +136,7 @@ class _CitasScreenState extends State<CitasScreen>
 
     int? selectedCliente = row?['id_cliente'] as int?;
     int? selectedTatuador = row?['id_tatuador'] as int?;
-    int? selectedDiseno = row?['id_diseño'] as int?;
+    int? selectedDiseno = row?['id_diseno'] as int?;
     String estado = row?['estado'] ?? 'Pendiente';
     final notasController = TextEditingController(text: row?['notas'] ?? '');
 
@@ -314,7 +318,7 @@ class _CitasScreenState extends State<CitasScreen>
                         ),
                         items: disenos
                             .map((d) => DropdownMenuItem(
-                                value: d['id_diseño'] as int,
+                                value: d['id_diseno'] as int,
                                 child: Text(d['nombre'] ?? '')))
                             .toList(),
                         onChanged: (v) => selectedDiseno = v,
@@ -390,15 +394,17 @@ class _CitasScreenState extends State<CitasScreen>
                                       Text('Selecciona cliente y tatuador')));
                           return;
                         }
-                        final data = {
+                        final data = <String, dynamic>{
                           'fecha': fechaController.text,
                           'hora': horaController.text,
                           'id_cliente': selectedCliente,
                           'id_tatuador': selectedTatuador,
-                          'id_diseño': selectedDiseno,
                           'estado': estado,
                           'notas': notasController.text,
                         };
+                        if (selectedDiseno != null) {
+                          data['id_diseno'] = selectedDiseno;
+                        }
                         if (row == null) {
                           await DatabaseHelper.instance.insertCita(data);
                         } else {
@@ -566,10 +572,96 @@ class _CitasScreenState extends State<CitasScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 SearchField(
-                  hintText: 'Buscar por cliente, tatuador o estado...',
+                  hintText: 'Buscar por cliente, tatuador, estado o diseño...',
                   onChanged: _filterCitas,
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 200,
+                      child: DropdownButtonFormField<String?>(
+                        value: _filtroEstado,
+                        decoration: InputDecoration(
+                          labelText: 'Estado',
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('Todos'),
+                          ),
+                          ...[
+                            'Pendiente',
+                            'Confirmada',
+                            'Completada',
+                            'Cancelada',
+                          ].map(
+                            (e) => DropdownMenuItem<String?>(
+                              value: e,
+                              child: Text(e),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          setState(() => _filtroEstado = v);
+                          _aplicarFiltrosCitas();
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 240,
+                      child: DropdownButtonFormField<int?>(
+                        value: _filtroTatuador,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Tatuador',
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text('Todos'),
+                          ),
+                          ...tatuadores.map(
+                            (t) => DropdownMenuItem<int?>(
+                              value: t['id_tatuador'] as int,
+                              child: Text(
+                                '${t['nombre']} ${t['apellido']}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          setState(() => _filtroTatuador = v);
+                          _aplicarFiltrosCitas();
+                        },
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _filtroEstado = null;
+                          _filtroTatuador = null;
+                        });
+                        _aplicarFiltrosCitas();
+                      },
+                      icon: const Icon(Icons.filter_alt_off_rounded, size: 20),
+                      label: const Text('Limpiar filtros'),
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import '../database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common_widgets.dart';
@@ -36,13 +39,22 @@ class _ReportesScreenState extends State<ReportesScreen> {
           'tatuadores': estadisticas['tatuadores'] ?? 0,
           'citas': estadisticas['citas'] ?? 0,
           'diseños': estadisticas['diseños'] ?? 0,
+          'depositos': estadisticas['depositos'] ?? 0,
+          'historial': estadisticas['historial'] ?? 0,
         };
         totalIngresos = ingresos;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
-        stats = {'clientes': 0, 'tatuadores': 0, 'citas': 0, 'diseños': 0};
+        stats = {
+          'clientes': 0,
+          'tatuadores': 0,
+          'citas': 0,
+          'diseños': 0,
+          'depositos': 0,
+          'historial': 0,
+        };
         totalIngresos = 0.0;
         isLoading = false;
       });
@@ -69,8 +81,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
             '${cliente['fecha_registro'] ?? ''}\n';
       }
 
-      await _guardarArchivo(csv, 'reporte_clientes.csv');
-      _mostrarMensaje('Reporte de clientes exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_clientes.csv');
+      _mostrarMensaje(
+        'Clientes exportados (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte: $e', false);
     }
@@ -98,8 +114,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
 
       csv += '\nTOTAL INGRESOS,,,,$totalIngresos\n';
 
-      await _guardarArchivo(csv, 'reporte_ingresos.csv');
-      _mostrarMensaje('Reporte de ingresos exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_ingresos.csv');
+      _mostrarMensaje(
+        'Ingresos exportados (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte: $e', false);
     }
@@ -127,8 +147,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
             '"${cita['notas'] ?? ''}"\n';
       }
 
-      await _guardarArchivo(csv, 'reporte_citas.csv');
-      _mostrarMensaje('Reporte de citas exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_citas.csv');
+      _mostrarMensaje(
+        'Citas exportadas (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte: $e', false);
     }
@@ -154,8 +178,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
             '${tatuador['disponibilidad']}\n';
       }
 
-      await _guardarArchivo(csv, 'reporte_tatuadores.csv');
-      _mostrarMensaje('Reporte de tatuadores exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_tatuadores.csv');
+      _mostrarMensaje(
+        'Tatuadores exportados (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte: $e', false);
     }
@@ -182,8 +210,12 @@ class _ReportesScreenState extends State<ReportesScreen> {
             '"${diseno['descripcion'] ?? ''}"\n';
       }
 
-      await _guardarArchivo(csv, 'reporte_disenos.csv');
-      _mostrarMensaje('Reporte de disenos exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_disenos.csv');
+      _mostrarMensaje(
+        'Diseños exportados (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte: $e', false);
     }
@@ -199,11 +231,13 @@ class _ReportesScreenState extends State<ReportesScreen> {
 
       // Estadísticas generales
       csv += '===== ESTADÍSTICAS GENERALES =====\n';
-      csv += 'Total Clientes,$stats["clientes"]\n';
-      csv += 'Total Tatuadores,$stats["tatuadores"]\n';
-      csv += 'Total Citas,$stats["citas"]\n';
-      csv += 'Total Diseños,$stats["diseños"]\n';
-      csv += 'Ingresos Totales,\$$totalIngresos\n\n';
+      csv += 'Total Clientes,${stats['clientes'] ?? 0}\n';
+      csv += 'Total Tatuadores,${stats['tatuadores'] ?? 0}\n';
+      csv += 'Total Citas,${stats['citas'] ?? 0}\n';
+      csv += 'Total Diseños,${stats['diseños'] ?? 0}\n';
+      csv += 'Entradas historial cliente,${stats['historial'] ?? 0}\n';
+      csv += 'Depósitos registrados,${stats['depositos'] ?? 0}\n';
+      csv += 'Ingresos Totales (pagos completados),$totalIngresos\n\n';
 
       // Clientes
       csv += '===== CLIENTES =====\n';
@@ -259,36 +293,145 @@ class _ReportesScreenState extends State<ReportesScreen> {
       }
       csv += '\n';
 
+      csv += '===== DEPÓSITOS =====\n';
+      csv += 'ID,Cliente,Monto,Estado,Fecha,Notas\n';
+      final depositos = await DatabaseHelper.instance.getDepositos();
+      for (var d in depositos) {
+        csv += '${d['id_deposito']},'
+            '${d['cliente'] ?? 'N/A'},'
+            '${d['monto']},'
+            '${d['estado']},'
+            '${d['fecha']},'
+            '"${d['notas'] ?? ''}"\n';
+      }
+      csv += '\n';
+
+      csv += '===== HISTORIAL CLIENTE (NOTAS) =====\n';
+      csv += 'ID,IdCliente,Fecha,Título,Notas\n';
+      final db = await DatabaseHelper.instance.database;
+      final histRows = await db.query('historial_cliente',
+          orderBy: 'fecha DESC');
+      for (var h in histRows) {
+        csv += '${h['id_historial']},'
+            '${h['id_cliente']},'
+            '${h['fecha']},'
+            '"${h['titulo']}",'
+            '"${h['notas'] ?? ''}"\n';
+      }
+      csv += '\n';
+
       csv += '========== FIN DEL REPORTE ==========\n';
 
-      await _guardarArchivo(csv, 'reporte_completo.csv');
-      _mostrarMensaje('Reporte completo exportado exitosamente', true);
+      final out = await _guardarArchivo(csv, 'reporte_completo.csv');
+      _mostrarMensaje(
+        'Reporte completo (${p.basename(out)})',
+        true,
+        exportPath: out,
+      );
     } catch (e) {
       _mostrarMensaje('Error al generar reporte completo: $e', false);
     }
   }
 
-  // Guardar archivo en el sistema
-  Future<void> _guardarArchivo(String contenido, String nombreArchivo) async {
+  /// Guarda texto: primero pide ubicación al usuario; si cancela, usa carpeta de documentos.
+  Future<String> _guardarArchivo(String contenido, String nombreArchivo) async {
     try {
-      // Obtener directorio de documentos
-      final directoryPath = await getApplicationDocumentsPath();
+      final extOnly = p.extension(nombreArchivo).replaceFirst('.', '');
+      final picked = await FilePicker.platform.saveFile(
+        dialogTitle: 'Guardar reporte',
+        fileName: nombreArchivo,
+        type: FileType.custom,
+        allowedExtensions: [extOnly.isEmpty ? 'csv' : extOnly],
+      );
 
-      // Crear el directorio si no existe
+      if (picked != null) {
+        var path = picked;
+        final ext = p.extension(nombreArchivo);
+        if (ext.isNotEmpty && !path.toLowerCase().endsWith(ext.toLowerCase())) {
+          path += ext;
+        }
+        await File(path).writeAsString(contenido);
+        return path;
+      }
+
+      final directoryPath = await getApplicationDocumentsPath();
       final directory = Directory(directoryPath);
       if (!await directory.exists()) {
         await directory.create(recursive: true);
       }
-
       final path = p.join(directoryPath, nombreArchivo);
-
-      // Crear archivo
-      final file = File(path);
-      await file.writeAsString(contenido);
-
-      print('Archivo guardado en: $path');
+      await File(path).writeAsString(contenido);
+      return path;
     } catch (e) {
       throw Exception('Error al guardar archivo: $e');
+    }
+  }
+
+  Future<void> _generarPdfResumen() async {
+    try {
+      final ingresos = await DatabaseHelper.instance.getTotalIngresos();
+      final depositosTotal =
+          await DatabaseHelper.instance.getTotalDepositosRecibidos();
+
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (context) => pw.Padding(
+            padding: const pw.EdgeInsets.all(40),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'InkManager — Resumen',
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                pw.Text(
+                  'Generado: ${DateTime.now().toString().split('.').first}',
+                  style: const pw.TextStyle(fontSize: 11),
+                ),
+                pw.SizedBox(height: 24),
+                pw.Text('Clientes: ${stats['clientes'] ?? 0}'),
+                pw.Text('Tatuadores: ${stats['tatuadores'] ?? 0}'),
+                pw.Text('Citas: ${stats['citas'] ?? 0}'),
+                pw.Text('Diseños: ${stats['diseños'] ?? 0}'),
+                pw.Text('Depósitos (movimientos): ${stats['depositos'] ?? 0}'),
+                pw.Text('Notas en historial: ${stats['historial'] ?? 0}'),
+                pw.SizedBox(height: 16),
+                pw.Text(
+                  'Ingresos por pagos completados: ${ingresos.toStringAsFixed(2)}',
+                ),
+                pw.Text(
+                  'Total depósitos recibidos: ${depositosTotal.toStringAsFixed(2)}',
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final bytes = await pdf.save();
+      final path = await FilePicker.platform.saveFile(
+        dialogTitle: 'Guardar PDF',
+        fileName:
+            'reporte_resumen_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (path == null) {
+        _mostrarMensaje('Exportación PDF cancelada', false);
+        return;
+      }
+      var out = path;
+      if (!out.toLowerCase().endsWith('.pdf')) out = '$out.pdf';
+      await File(out).writeAsBytes(bytes);
+      _mostrarMensaje('PDF guardado: ${p.basename(out)}', true);
+    } catch (e) {
+      _mostrarMensaje('Error al generar PDF: $e', false);
     }
   }
 
@@ -306,7 +449,11 @@ class _ReportesScreenState extends State<ReportesScreen> {
   }
 
   // Mostrar mensaje al usuario
-  void _mostrarMensaje(String mensaje, bool esExito) {
+  void _mostrarMensaje(
+    String mensaje,
+    bool esExito, {
+    String? exportPath,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -330,14 +477,11 @@ class _ReportesScreenState extends State<ReportesScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         duration: const Duration(seconds: 4),
-        action: esExito
+        action: esExito && exportPath != null
             ? SnackBarAction(
-                label: 'Ver',
+                label: 'Ver ruta',
                 textColor: Colors.white,
-                onPressed: () async {
-                  final path = await getApplicationDocumentsPath();
-                  _mostrarDialogoRuta(path);
-                },
+                onPressed: () => _mostrarDialogoRuta(exportPath),
               )
             : null,
       ),
@@ -434,7 +578,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                               ),
                             ),
                             Text(
-                              'Exporta reportes en formato CSV',
+                              'Exporta CSV (elige carpeta) o PDF de resumen',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: Theme.of(context)
@@ -511,7 +655,7 @@ class _ReportesScreenState extends State<ReportesScreen> {
                   // Opciones de Exportación
                   const SectionHeader(
                     title: 'Exportar Reportes',
-                    subtitle: 'Descarga reportes en formato CSV',
+                    subtitle: 'CSV con diálogo de guardado, o PDF de resumen',
                   ),
                   const SizedBox(height: 20),
                   GridView.count(
@@ -563,6 +707,13 @@ class _ReportesScreenState extends State<ReportesScreen> {
                         Icons.description_rounded,
                         AppColors.reportesAccent,
                         _generarReporteCompleto,
+                      ),
+                      _buildReportButton(
+                        'Resumen PDF',
+                        'Documento PDF con estadísticas e ingresos',
+                        Icons.picture_as_pdf_rounded,
+                        Colors.deepPurple,
+                        _generarPdfResumen,
                       ),
                     ],
                   ),
