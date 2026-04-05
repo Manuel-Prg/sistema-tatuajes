@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../database_helper.dart';
+import '../data/database_helper.dart';
 import '../widgets/common_widgets.dart';
 
 class ConfiguracionScreen extends StatefulWidget {

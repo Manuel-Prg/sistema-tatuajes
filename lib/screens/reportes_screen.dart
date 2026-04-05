@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import '../database_helper.dart';
+import '../data/database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/common_widgets.dart';
 

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
-import 'database_helper.dart';
+import '../data/database_helper.dart';
 import 'theme/theme_provider.dart';
 import 'theme/app_colors.dart';
 import 'screens/home_screen.dart';
